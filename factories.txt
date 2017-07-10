@@ -1,0 +1,11 @@
+"factories"
+{
+	"title"		"Factories"
+	"base"		"base"
+	"maps"		"^fact_"
+	"menusystem"	"1"
+
+	"settings"
+	{
+	}
+}
