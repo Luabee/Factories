@@ -19,6 +19,16 @@ function ENT:Initialize()
 	-- if SERVER then self:EmitSound("ambient/fire/fire_big_loop1.wav", 60) end
 	self:SetupPreview()
 
+	if ConVars.Server.collisions:GetBool() then
+		self:PhysicsInit(SOLID_VPHYSICS)
+		if SERVER then
+			local phy = self:GetPhysicsObject()
+			if IsValid(phy) then
+				phy:EnableMotion(false)
+			end
+		end
+	end
+	
 	timer.Simple(.5,function()
 		self:UpdateInOut()
 		for k,v in pairs(self:GetAdjacentEnts())do
@@ -104,7 +114,7 @@ function ENT:CanReceive(itemclass,input)
 	if exitem then
 		local recipe = exitem.Recipe
 		local held = self.Using[itemclass]
-		if not held or held.Quantity < recipe.ingredients[itemclass] * 2 then --we can hold more.
+		if input:GetDroppingOff() or (not held or held.Quantity < recipe.ingredients[itemclass] * 2)  then --we can hold more.
 			return true
 		end
 	end
@@ -163,6 +173,42 @@ function ENT:Craft()
 			
 		end
 	end
+	
+end
+
+
+function ENT:Save(tbl)
+	self:SellAll()
+	if self.Rotates then
+		tbl.yaw = self.Yaw
+	end
+	
+	if self.GetImport then 
+		tbl.item = self:GetImport() 
+	elseif self.GetExport then
+		tbl.item = self:GetExport()
+	end
+	
+	
+	return tbl
+end
+function ENT:Load(tbl)
+	if self.Rotates then
+		self.Yaw = tbl.yaw
+	end
+	
+	if self.SetImport then 
+		self:SetImport(tbl.item) 
+	elseif self.SetExport then
+		self:SetExport(tbl.item)
+	end
+	
+	self.Receives = {}
+	for k,v in pairs(items.List[tbl.item].Recipe.ingredients) do
+		self.Receives[k] = true
+	end
+	self.Holding = {}
+	self.Using = {}
 	
 end
 

@@ -19,7 +19,19 @@ function ENT:Initialize()
 	-- crane models/hunter/blocks/cube025x2x025.mdl
 	
 	self:SetupPreview()
-
+	
+	self.Time = 0
+	
+	if ConVars.Server.collisions:GetBool() then
+		self:PhysicsInit(SOLID_VPHYSICS)
+		if SERVER then
+			local phy = self:GetPhysicsObject()
+			if IsValid(phy) then
+				phy:EnableMotion(false)
+			end
+		end
+	end
+	
 	timer.Simple(.5,function()
 		self:UpdateInOut()
 		for k,v in pairs(self:GetAdjacentEnts())do
@@ -52,7 +64,8 @@ function ENT.PostDrawPreview(self)
 	end
 	
 	--draw crane
-	self:SetMaterial("phoenix_storms/dome")
+	-- self:SetMaterial("phoenix_storms/dome")
+	self:SetMaterial("phoenix_storms/wire/pcb_red")
 	self:SetAngles(oldang)
 	if animate then
 		self:SetPos(oldpos+Vector(30 + (math.sin(self.Time/2) * 25),-23.7,35))
@@ -78,7 +91,7 @@ function ENT.PostDrawPreview(self)
 	self:DrawModel()
 	
 	--draw sweeper 1
-	self:SetMaterial("phoenix_storms/wire/pcb_red")
+	self:SetMaterial("phoenix_storms/future_vents")
 	self:SetModel("models/Mechanics/robotics/xfoot.mdl")
 	self:SetPos(self:GetPos() + self:GetForward() * 18 + Vector(0,0,-7) )
 	self:SetupBones()

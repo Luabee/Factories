@@ -4,14 +4,14 @@ money = money or {}
 local plymeta = FindMetaTable("Player")
 
 function plymeta:SetMoney(new,nosave)
-	self:SetNW2Float("fact_money", new)
-	if !nosave then
-		self:SetPData("fact_money", new)
+	if SERVER then
+		self:SetNW2Float("fact_money", new)
 	end
 end
 function plymeta:AddMoney(amt, source)
-	self:SetMoney(self:GetMoney() + amt)
-	if CLIENT and isvector(source) and amt != 0 then
+	if SERVER then
+		self:SetMoney(self:GetMoney() + amt)
+	elseif CLIENT and isvector(source) and amt != 0 then
 		table.insert(money.incomes,{source,amt,RealTime()})
 	end
 end

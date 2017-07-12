@@ -5,13 +5,23 @@ ENT.Base = "base_fact"
 ENT.IsItemHolder = true
 
 
-
 function ENT:Initialize()
 	
-	self:SetModel("models/props_wasteland/buoy01.mdl")
+	self:SetSize(self.Dimensions.w, self.Dimensions.h)
+	self:SetModel("models/props_junk/cardboard_box004a.mdl")
 	self:SetupPreview()
 	
 	self:SetupTables()
+	
+	if ConVars.Server.collisions:GetBool() then
+		self:PhysicsInit(SOLID_VPHYSICS)
+		if SERVER then
+			local phy = self:GetPhysicsObject()
+			if IsValid(phy) then
+				phy:EnableMotion(false)
+			end
+		end
+	end
 	
 	timer.Simple(.5,function()
 		self:UpdateInOut()
@@ -47,6 +57,59 @@ function ENT:SetupTables()
 	--Lists of adjacent ents:
 	self.Inputs = {}
 	self.Outputs = {}
+end
+
+function ENT:Save(tbl)
+	if self.Rotates then
+		tbl.yaw = self.Yaw
+	end
+	
+	tbl.Holding, tbl.Using, tbl.Receives, tbl.Requesting = {}, {}, {}, {}
+	for k,v in pairs(self.Holding) do
+		tbl.Holding[k] = {class=v.ClassName, quan=v.Quantity}
+	end
+	for k,v in pairs(self.Using) do
+		tbl.Using[k] = {class=v.ClassName, quan=v.Quantity}
+	end
+	for k,v in pairs(self.Receives) do
+		tbl.Receives[k] = true
+	end
+	for k,v in pairs(self.Requesting) do
+		tbl.Requesting[k] = true
+	end
+	
+	if self.GetImport then 
+		tbl.item = self:GetImport() 
+	elseif self.GetExport then
+		tbl.item = self:GetExport()
+	end
+	
+	return tbl
+end
+function ENT:Load(tbl)
+	if self.Rotates then
+		self.Yaw = tbl.yaw
+	end
+	
+	for k,v in pairs(tbl.Holding) do
+		self.Holding[k] = items.Create(v.class,v.quan)
+	end
+	for k,v in pairs(tbl.Using) do
+		self.Using[k] = items.Create(v.class,v.quan)
+	end
+	for k,v in pairs(tbl.Receives) do
+		self.Receives[k] = true
+	end
+	for k,v in pairs(tbl.Requesting) do
+		self.Requesting[k] = true
+	end
+	
+	if self.SetImport then 
+		self:SetImport(tbl.item) 
+	elseif self.SetExport then
+		self:SetExport(tbl.item)
+	end
+	
 end
 
 function ENT.SetupPreview(self)
@@ -183,11 +246,13 @@ function ENT:UpdateInOut()
 		end
 	end
 	
-	-- print("Inputs:")
-	-- PrintTable(self.Inputs)
-	-- print("Outputs:")
-	-- PrintTable(self.Outputs)
-	-- print("")
+	-- if self.IsConveyor then
+		-- print("Inputs:")
+		-- PrintTable(self.Inputs)
+		-- print("Outputs:")
+		-- PrintTable(self.Outputs)
+		-- print("")
+	-- end
 end
 
 function ENT:GetAdjacentEnts()
@@ -215,9 +280,10 @@ function ENT:GetAdjacentEnts()
 end
 
 function ENT:SellAll()
+	if IsValid(self:GetMaker()) and self:GetMaker().FactorySync then return end
 	
 	local total = 0
-	for k,v in pairs(self.Holding) do
+	for k,v in pairs(self.Holding or {}) do
 		total = total + v.Quantity * v.BasePrice
 	end
 	self.Holding = {}
@@ -235,6 +301,12 @@ function ENT:SellAll()
 		end
 	end
 end
+
+
+
+local bgcol = Color(100,100,100,200)
+local bgcol_finishedProduct = Color(80,80,120,200)
+local bgcol_locked = Color(120,80,80,200)
 
 --This function allows modularity for a very common menu
 --name is the name of the popup window.
@@ -264,19 +336,32 @@ function ENT:ShowSelectionMenu(name, filter, onclose)
 	end
 	frame.OnClose = onclose
 	
-	local selected = vgui.Create("ItemPreview",frame)
-	selected:SetSize(145,145)
-	selected:SetPos(5,30)
+	local bg = vgui.Create("Panel",frame)
+	bg:SetSize(145,145)
+	bg:SetPos(5,30)
+	function bg:Paint(w,h)
+
+		if frame.Item and frame.Item.FinishedProduct then
+			surface.SetDrawColor(bgcol_finishedProduct)
+		else
+			surface.SetDrawColor(bgcol)
+		end
+		surface.DrawRect(0,0,w,h)
+	end
+	local selected = vgui.Create("ItemPreview",bg)
+	selected:Dock(FILL)
 	if item then
 		selected:SetModel(item.Model)
 		if item.EntClass then
 			selected:SetEntity(item.EntClass)
 		end
+		selected:SetMaterial(item.Material)
 	end
 	function selected:PaintOver(w,h)
 		surface.SetDrawColor(color_black)
 		surface.DrawOutlinedRect(0,0,w,h)
 	end
+	
 	local price = vgui.Create("DLabel",selected)
 	price:SetFont("factRoboto20")
 	price:SetTextColor(Color(80,255,80))
@@ -351,6 +436,7 @@ function ENT:ShowSelectionMenu(name, filter, onclose)
 			if item.EntClass then
 				selected:SetEntity(item.EntClass)
 			end
+			selected:SetMaterial(item.Material)
 			title:SetText(item.Name)
 			price:SetText("$"..string.Comma(item.BasePrice))
 			desc:SetText(item.Desc)
@@ -384,6 +470,7 @@ function ENT:ShowSelectionMenu(name, filter, onclose)
 					if v.EntClass then
 						selected:SetEntity(v.EntClass)
 					end
+					selected:SetMaterial(v.Material)
 					title:SetText(v.Name)
 					price:SetText("$"..string.Comma(v.BasePrice))
 					desc:SetText(v.Desc)

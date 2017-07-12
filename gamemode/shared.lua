@@ -10,6 +10,7 @@ GM.TeamBased	= false
 ConVars = {}
 	ConVars.Server = {}
 	ConVars.Server.startmoney = CreateConVar("fact_money_start", 1000, { FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_SERVER_CAN_EXECUTE}, "Sets money new players start with.")
+	ConVars.Server.collisions = CreateConVar("fact_collisions", 0, { FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_SERVER_CAN_EXECUTE}, "Whether players collide with certain factory parts.")
 	
 if CLIENT then
 	ConVars.Client = {}

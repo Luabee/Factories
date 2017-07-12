@@ -1,11 +1,6 @@
  
 local plymeta = FindMetaTable("Player")
 
--- inv.SelectedPanel = nil
-
-function plymeta:GetInventory()
-	return self.Inventory or {}
-end
 
 function inv.BuyItem(class)
 	if not LocalPlayer():CanAfford(items.List[class].BasePrice) then 
@@ -44,14 +39,15 @@ end
 net.Receive("fact_invsync",function()
 	local ply = net.ReadEntity()
 	local size = net.ReadFloat()
+	for k,v in pairs(ply:GetInventory()) do
+		ply:RemoveInvItem(v)
+	end
 	ply.Inventory = {}
 	
 	for i=1, size do
-		local class = net.ReadString()
-		local quan = net.ReadFloat()
-		local i = ply:AddInvItem(class)
-		i.Quantity = quan
+		ply:AddInvItem(net.ReadString(), net.ReadFloat())
 	end
+	
 	
 end)
 
@@ -117,14 +113,14 @@ function CreateInvMenu()
 	function frame:Update()
 		local inventory = LocalPlayer():GetInventory()
 		if table.Count(inventory) == 0 then
-			local empty = vgui.Create("DLabel",invScroll)
-			empty:Dock(FILL)
-			empty:DockMargin(0,20,0,0)
-			empty:SetText("\n\n\nYour inventory is empty.")
-			empty:SetFont("factRoboto30")
-			empty:SetTextColor(color_white)
-			empty:SetExpensiveShadow(1,color_black)
-			empty:SetContentAlignment(5)
+			-- local empty = vgui.Create("DLabel",invScroll)
+			-- empty:Dock(FILL)
+			-- empty:DockMargin(0,20,0,0)
+			-- empty:SetText("\n\n\nYour inventory is empty.")
+			-- empty:SetFont("factRoboto30")
+			-- empty:SetTextColor(color_white)
+			-- empty:SetExpensiveShadow(1,color_black)
+			-- empty:SetContentAlignment(5)
 		else
 			for k,v in pairs(inventory) do
 				local ListItem = invpnl:Add( "InvItem" ) //Add DPanel to the DIconLayout
@@ -274,6 +270,7 @@ function CreateInvMenu()
 		
 		if i != self.Item then
 			self.Item = i
+			self.preview:SetMaterial(i.Material)
 			self.preview:SetModel(i.Model)
 			self.preview:SetEntity(i.EntClass)
 			preTitle:SetText(i.Name)

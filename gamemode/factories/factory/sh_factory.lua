@@ -8,31 +8,33 @@ fact.LowestZ = -12000
 fact.ZHeight = 200
 -- fact.Layers = {}
 
-if SERVER then
-	hook.Add("PlayerInitialSpawn","fact_createFactObj",function(ply)
-		ply:ResetFactory()
+if CLIENT then
+	hook.Add("Initialize","fact_loading",function()
+		fact.Loading = true
 	end)
-	hook.Add("EntityRemoved","fact_removeFact",function(ent)
-		if ent:IsPlayer() then
-			for k,v in pairs(ents.GetAll())do
-				if v.GetMaker and v:GetMaker() == ent or v.Owner == ent then
-					v:Remove()
-				end
-			end
-		end
-	end)
-else
 	hook.Add("InitPostEntity","fact_createFactObj",function()
 		fact.Create(LocalPlayer())
+		fact.Loading = false
 	end)
 end
 
 function plymeta:ResetFactory()
 	if self:GetFactory() then
 		for k,v in pairs(self:GetFactory().Ents)do
-			v:Remove()
+			if IsValid(v) then
+				v:Remove()
+			end
+		end
+		for k,v in pairs(self:GetFactory().Walls)do
+			if IsValid(v) then
+				v:Remove()
+			end
 		end
 	end
+	for k,v in pairs(self:GetInventory())do
+		self:RemoveInvItem(v)
+	end
+	self.Inventory = {}
 	
 	local fac = fact.Create(self)
 	-- local pos = fac.Root + Vector((fact.MaxFactorySize-4)*grid.Size, (fact.MaxFactorySize-4)*grid.Size, -1) 
@@ -50,38 +52,95 @@ function plymeta:ResetFactory()
 		local gridx, gridy = (pos + Vector( -grid.Size*.5, -grid.Size*.5, -1)):ToGrid(fac)
 		grid.AddFloor(fac, gridx, gridy, 4, 4, floor)
 		self:SetPos(pos+Vector(-grid.Size*.5,-grid.Size*.5,5))
+		-- self:SendLua("fact.Loading = false")
 		
-		self:GiveInvItem("fact_floor")
-		self:GiveInvItem("fact_floor")
-		self:GiveInvItem("fact_floor")
-		self:GiveInvItem("fact_floor")
-		self:GiveInvItem("fact_inserter")
-		self:GiveInvItem("fact_inserter")
-		self:GiveInvItem("fact_inserter")
-		self:GiveInvItem("fact_inserter")
-		self:GiveInvItem("fact_importer")
-		self:GiveInvItem("fact_importer")
-		self:GiveInvItem("fact_conveyor")
-		self:GiveInvItem("fact_conveyor")
-		self:GiveInvItem("fact_conveyor")
-		self:GiveInvItem("fact_conveyor")
-		self:GiveInvItem("fact_conveyor")
-		self:GiveInvItem("fact_conveyor")
-		self:GiveInvItem("fact_conveyor")
-		self:GiveInvItem("fact_conveyor")
-		self:GiveInvItem("fact_conveyor")
-		self:GiveInvItem("fact_conveyor")
-		self:GiveInvItem("fact_conveyor")
-		self:GiveInvItem("fact_conveyor")
-		self:GiveInvItem("fact_conveyor")
-		self:GiveInvItem("fact_assembler")
-		self:GiveInvItem("fact_assembler")
-		self:GiveInvItem("fact_pallet")
-		self:GiveInvItem("fact_pallet")
-		self:GiveInvItem("fact_miner")
-		self:GiveInvItem("fact_miner")
-		self:SyncInventory()
+		self:ResetInventory()
 	end)
+end
+
+function fact.PlaceObject(ply,item,gridX, gridY,rot,nosound)
+	local fac = ply:GetFactory()
+	local vec = grid.ToVector(fac, gridX, gridY)	
+	if isstring(item) then
+		item = items.Create(item)
+	end
+	
+	if item and item.EntClass then
+		
+		local e = scripted_ents.GetStored(item.EntClass)
+		if e then e = e.t else return end
+		local dim,floor = e.Dimensions or {w=1, h=1}, e.IsFloor
+		local can = (floor and grid.CanPlaceFloor(fac,gridX, gridY, dim.w, dim.h)) or (not floor and grid.CanPlace(fac, gridX, gridY, dim.w, dim.h))
+		
+		if can then
+			
+			
+			local ent = ents.Create(item.EntClass)
+			ent:SetPos(vec + ent.GridOffset)
+			local ang = ent.AngOffset-- - Angle(0,90,0)
+			if ent.Rotates then
+				ang = ang + Angle(0,rot,0)
+			end
+			ent:SetAngles(ang)
+			table.insert(fac.Ents, ent)
+			ent:SetMaker(ply)
+			ent:SetGridPos(gridX, gridY)
+			ent.Item = item
+			ent:SetItemClass(item.ClassName)
+			ent:Spawn()
+			if not nosound then
+				sound.Play( ent:GetPlaceSound(), ent:GetPos(), 75, 100, 1 )
+			end
+			-- debugoverlay.Box(vec, Vector(-grid.Size/2, -grid.Size/2, -5), Vector(grid.Size/2, grid.Size/2, 5), 20, Color(0,0,255,100))
+			
+			
+			if floor then
+				grid.AddFloor(fac,gridX, gridY, dim.w, dim.h, ent)
+			else
+				grid.AddItem(fac,gridX, gridY, dim.w, dim.h, ent)
+			end
+			
+			return ent
+			
+		end
+		
+		
+	end
+end
+
+if SERVER then
+	util.AddNetworkString("fact_syncfactory")
+	net.Receive("fact_syncfactory",function(len,ply)
+		ply:SyncFactory()
+	end)
+	function plymeta:SyncFactory()
+		local pos = self:GetPos()
+		self:SaveFactory()
+		
+		self.FactorySync = true
+		for k,v in pairs(self:GetFactory().Ents)do
+			if IsValid(v) then
+				v:Remove()
+			end
+		end
+		for k,v in pairs(self:GetFactory().Walls)do
+			if IsValid(v) then
+				v:Remove()
+			end
+		end
+		
+		timer.Simple(1,function()
+			net.Start("fact_syncfactory")
+			net.Send(self)
+			
+			local root = self:GetFactory().Root
+			local fac = fact.Create(self)
+			fac.Root = root
+			self:LoadFactory()
+			self:SetPos(pos)
+			self.FactorySync = false
+		end)
+	end
 end
 
 function plymeta:GetFactory()
@@ -129,7 +188,9 @@ function fact.RebuildWalls(fac)
 	local f = fac.Floors
 	
 	for k,v in pairs(fac.Walls)do
-		v:Remove()
+		if IsValid(v) then
+			v:Remove()
+		end
 	end
 	
 	local wallEnts = {}

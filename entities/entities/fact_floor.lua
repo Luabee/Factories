@@ -4,7 +4,7 @@ ENT.Base = "base_fact"
 ENT.IsFloor = true
 ENT.Dimensions = {w=4, h=4}
 ENT.GridOffset = Vector(-grid.Size*1.5, -grid.Size*1.5 ,-1)
-ENT.BreakSpeed = 3
+ENT.BreakSpeed = 2.5
 
 function ENT:Initialize()
 	

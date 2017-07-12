@@ -1,6 +1,8 @@
 
 local PNL = {}
 
+AccessorFunc(PNL,"Material","Material")
+
 function PNL:Init()
 	self:SetFOV( 65 )
 	self.rand = math.random(0,359)
@@ -31,7 +33,8 @@ function PNL:DrawModel()
 		if self.sent and self.sent.PreDrawPreview then
 			self.sent.PreDrawPreview(self.Entity)
 		end
-	
+		
+		self.Entity:SetMaterial(self:GetMaterial())
 		self.Entity:DrawModel()
 		
 		if self.sent and self.sent.PostDrawPreview then

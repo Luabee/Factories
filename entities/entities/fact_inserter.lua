@@ -21,7 +21,7 @@ function ENT:Initialize()
 	self.NoFilter = true
 	
 	if SERVER then
-		self:SetNW2Float("NextPickup",CurTime()+1+self.InsertSpeed/2)
+		self:SetNW2Float("NextPickup",CurTime()+1+math.Rand(0,1))
 	else
 		-- self:SetPredictable(true)
 	end
@@ -37,6 +37,15 @@ function ENT:Initialize()
 							net.Start("fact_insertersync")
 								net.WriteEntity(self)
 								net.WriteFloat(self:GetAngles().y)
+								net.WriteBool(self:GetPickingUp())
+								net.WriteBool(self:GetDroppingOff())
+								net.WriteBool(self:GetDir())
+								if self.Holding[1] then
+									net.WriteBool(true)
+									net.WriteString(self.Holding[1].ClassName)
+								else
+									net.WriteBool(false)
+								end
 							net.Broadcast()
 						else
 							timer.Remove("insertersync"..eid)
@@ -91,21 +100,41 @@ function ENT.SetupPreview(self)
 	end
 end
 function ENT.PostDrawPreview(self)
+	local oldpos = self:GetPos()
 	local vec = Vector(-25,0,20)
 	local ang = self:GetRenderAngles() or self:GetAngles()
 	vec:Rotate(ang)
+	
+	if self.IsInserter then
+		
+		local item = self.Holding[1]
+		if item then
+			local pos = oldpos + self.magnet:GetForward() * -35 + self.magnet:GetUp() * -18
+			
+			self.magnet:SetModel(item.Model)
+			self.magnet:SetModelScale(item.ConveyorScale,0)
+			self.magnet:SetAngles(ang + item.ConveyorAngle)
+			self.magnet:SetMaterial(item.Material)
+			local vec = Vector(item.ConveyorOffset)
+			vec:Rotate(ang)
+			self.magnet:SetPos(pos + vec)
+			self.magnet:SetupBones()
+			self.magnet:DrawModel()
+			
+		end
+	end
+	
+	self.magnet:SetModel("models/props_wasteland/cranemagnet01a.mdl")
+	self.magnet:SetMaterial()
+	self.magnet:SetModelScale(.15)
 	self.magnet:SetPos(self:GetPos() + vec)
 	self.magnet:SetAngles(ang + Angle(45,0,0))
+	self.magnet:SetupBones()
 	self.magnet:DrawModel()
 end
 function ENT:Draw()
 	self:DrawModel()
-	local ang = self:GetRenderAngles() or self:GetAngles()
-	local vec = Vector(-25,0,20)
-	vec:Rotate(ang)
-	self.magnet:SetPos(self:GetPos() + vec)
-	self.magnet:SetAngles(ang + Angle(45,0,0))
-	self.magnet:DrawModel()
+	self.PostDrawPreview(self)
 end
 function ENT:GetSelectionMat()
 	return Material("factories/selected_inserter.png", "unlitgeneric"), self.Yaw
@@ -114,6 +143,7 @@ if CLIENT then
 	function ENT:OnRemove()
 		self.BaseClass.OnRemove(self)
 		self.magnet:Remove()
+		self:SellAll()
 	end
 	net.Receive("fact_insertersync",function()
 		local e = net.ReadEntity()
@@ -121,6 +151,12 @@ if CLIENT then
 			local a = Angle(0,net.ReadFloat(),0)
 			e:SetAngles(a)
 			e:SetRenderAngles(a)
+			e:SetPickingUp(net.ReadBool())
+			e:SetDroppingOff(net.ReadBool())
+			e:SetDir(net.ReadBool())
+			if net.ReadBool() then
+				e.Holding = {items.Create(net.ReadString())}
+			end
 		end
 	end)
 end
@@ -137,6 +173,11 @@ function ENT:Think()
 		self.Requesting = self.Outputs[1].Requesting
 		self.Receives = self.Outputs[1].Receives
 		self.NoFilter = self.Outputs[1].NoFilter
+		
+		if !self.Outputs[1].NoFilter and self:GetDroppingOff() and self.Holding[1] and !self.Receives[self.Holding[1].ClassName] then
+			self.Holding = {}
+			self:SetDir(false)
+		end
 	end
 	
 	self:Animate()
@@ -157,7 +198,27 @@ end
 function ENT:OnGive(item)
 	-- ct1 = ct1+1
 	-- print("Dropped off: ",item.Name, ct1)
+	self.Holding = {}
 	self:SetDir(false)
+end
+
+
+function ENT:Save(tbl)
+	tbl = self.BaseClass.Save(self,tbl)
+	
+	tbl.dir = self:GetDir()
+	tbl.pickup = self:GetPickingUp()
+	tbl.dropoff = self:GetDroppingOff()
+	
+	return tbl
+end
+function ENT:Load(tbl)
+	self.BaseClass.Load(self,tbl)
+	
+	self:SetDir(tbl.dir)
+	self:SetPickingUp(tbl.pickup)
+	self:SetDroppingOff(tbl.dropoff)
+	self:SetNW2Float("NextPickup",CurTime())
 end
 
 function ENT:SetupIO(adjacent)

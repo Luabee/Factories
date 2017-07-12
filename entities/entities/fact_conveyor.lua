@@ -9,7 +9,7 @@ AccessorFunc(ENT,"Bend","Bend",FORCE_NUMBER)
 conveyors = conveyors or {}
 
 ENT.Base = "base_fact_itemholder"
-ENT.BreakSpeed = .25
+ENT.BreakSpeed = .2
 ENT.Speed = 1 --time in seconds it takes to cross the entire conveyor.
 ENT.IsConveyor = true
 ENT.GridOffset = Vector(0,0,0)
@@ -48,11 +48,47 @@ function ENT:Initialize()
 end
 
 function ENT:OnRemove()
+	self.BaseClass.OnRemove(self)
 	if CLIENT then
 		self.items:Remove()
 	end
 	table.RemoveByValue(conveyors,self)
 	self:SellAll()
+end
+
+function ENT:Save(tbl)
+	tbl.yaw = self.Yaw
+	
+	tbl.Holding = {}
+	for k,v in pairs(self.Holding) do
+		tbl.Holding[k] = {class=v.ClassName, quan=v.Quantity, track=v.track, slot=v.conveyorSlot, trackIndex=table.KeyFromValue(self.Tracks[v.track], v)}
+	end
+	
+	if self.GetImport then 
+		tbl.item = self:GetImport() 
+	elseif self.GetExport then
+		tbl.item = self:GetExport()
+	end
+	
+	return tbl
+end
+function ENT:Load(tbl)
+	self.Yaw = tbl.yaw
+	
+	for k,v in pairs(tbl.Holding) do
+		self.Holding[k] = items.Create(v.class,v.quan)
+		self.Holding[k].track = v.track
+		local tr = self.Tracks[v.track]
+		tr[v.trackIndex] = self.Holding[k]
+		self.Holding[k].conveyorSlot = v.slot
+	end
+	
+	if self.SetImport then 
+		self:SetImport(tbl.item) 
+	elseif self.SetExport then
+		self:SetExport(tbl.item)
+	end
+	
 end
 
 function ENT:SetBend(b)
@@ -99,20 +135,25 @@ function ENT:SetupIO(adj)
 	
 end
 
+function ENT:Think()
+
+end
+
 function ENT:MoveTracks()
 	for t=1, 2 do
 		for k = #self.Tracks[t], 1, -1 do
 		local item = self.Tracks[t][k]
 		-- for k,item in ipairs(self.Tracks[t]) do
-			
-			if item.conveyorSlot > 1 then
-				local next = self.Tracks[t][k-1]
-				item.conveyorSlot = math.max(item.conveyorSlot - 1, next and next.conveyorSlot + smoothness/5 or 1)
-			else
-				local next = self.Outputs[1]
-				if IsValid(next) and next.IsConveyor then
-					if next:CanReceive(item.ClassName,self,t) and self:CanGive(item.ClassName, next, t) then
-						self:DropOff(item.ClassName,next,t)
+			if item then
+				if item.conveyorSlot > 1 then
+					local next = self.Tracks[t][k-1]
+					item.conveyorSlot = math.max(item.conveyorSlot - 1, next and next.conveyorSlot + smoothness/5 or 1)
+				else
+					local next = self.Outputs[1]
+					if IsValid(next) and next.IsConveyor then
+						if next:CanReceive(item.ClassName,self,t) and self:CanGive(item.ClassName, next, t) then
+							self:DropOff(item,next,t)
+						end
 					end
 				end
 			end
@@ -134,8 +175,9 @@ end
 function ENT:OnReceive(item, input, track)
 	local newtr = self:GetInputTrack(input,track)
 	item.track = newtr
-	table.insert(self.Tracks[newtr], item)
-	item.conveyorSlot = smoothness
+	local index = table.insert(self.Tracks[newtr], item)
+	local next = self.Tracks[newtr][index-1]
+	item.conveyorSlot = math.max(smoothness, next and next.conveyorSlot + smoothness/5 or 1)
 	
 	-- print("Tracks:")
 	-- PrintTable(self.Tracks)
@@ -148,6 +190,18 @@ function ENT:OnGive(item,output,track)
 	table.RemoveByValue(self.Tracks[track], item)
 end
 
+function ENT:DropOff(item, output, track)
+	if item then
+		table.insert(output.Holding, item)
+		
+		table.RemoveByValue(self.Holding, item)
+		
+		self:SetDroppingOff(false)
+		self:OnGive(item,output,track)
+		output:OnReceive(item,self,track)
+	end
+end
+
 function ENT:GetInputTrack(input, track) --track is optional. Use it if the input is a conveyor.
 	local fwx, fwy = -math.cos(math.rad(self.Yaw)), -math.sin(math.rad(self.Yaw))
 	local leftx, lefty = -math.cos(math.rad(self.Yaw+90)), -math.sin(math.rad(self.Yaw+90))
@@ -157,14 +211,14 @@ function ENT:GetInputTrack(input, track) --track is optional. Use it if the inpu
 	if inx == x+fwx and iny == y+fwy then --input is in front of us.
 		-- print("Front:",input)
 		if input.IsInserter then
-			return 1
+			return 2
 		else
 			return false
 		end
 	elseif inx == x-fwx and iny == y-fwy then --input is behind us.
 		-- print("Behind:",input)
 		if input.IsInserter then
-			return 2
+			return 1
 		else
 			return track
 		end
@@ -202,10 +256,12 @@ end
 hook.Add("PlayerTick","fact_conveyormove",function(ply,mv)
 	local pos = mv:GetOrigin()
 	local fac = ply:GetFactory()
-	local x,y = pos:ToGrid(fac)
-	if fac.Grid[x] and IsValid(fac.Grid[x][y]) and fac.Grid[x][y].IsConveyor then
-		local e = fac.Grid[x][y]
-		mv:SetVelocity(mv:GetVelocity() - e:GetForward() * (1/e.Speed)*25/7.5)
+	if fac then
+		local x,y = pos:ToGrid(fac)
+		if fac.Grid[x] and IsValid(fac.Grid[x][y]) and fac.Grid[x][y].IsConveyor then
+			local e = fac.Grid[x][y]
+			mv:SetVelocity(mv:GetVelocity() - e:GetForward() * (1/e.Speed)*25/7.5)
+		end
 	end
 end)
 
@@ -277,6 +333,7 @@ if CLIENT then
 				end
 				
 				self.items:SetModel(item.Model)
+				self.items:SetMaterial(item.Material)
 				self.items:SetModelScale(item.ConveyorScale,0)
 				self.items:SetAngles(self:GetAngles() + item.ConveyorAngle)
 				local vec = Vector(item.ConveyorOffset)

@@ -1,7 +1,6 @@
 
 local plymeta = FindMetaTable("Player")
 
-inv.List = inv.List or {} --this houses all the players' items.
 util.AddNetworkString("fact_invsync")
 util.AddNetworkString("fact_buyitem")
 util.AddNetworkString("fact_sellitem")
@@ -29,29 +28,12 @@ net.Receive("fact_sellitem",function(len,ply)
 	end
 end)
 
-hook.Add("PlayerInitialSpawn","fact_SetupInv",function(ply)
-	inv.List[ply] = {}
-	ply:LoadInventory()
-	ply:SetMoney(10000) --testing
-end)
-hook.Add("PlayerDisconnected","fact_SetupInv",function(ply)
-	ply:SaveInventory()
-	inv.List[ply] = nil
-end)
-hook.Add("ShutDown","fact_SetupInv",function()
-	for k,ply in pairs(player.GetAll()) do
-		ply:SaveInventory()
-	end
-end)
-
-function plymeta:GetInventory()
-	return inv.List[self]
-end
 function plymeta:SyncInventory(all) --this is a full sync of the inventory. 
+	local inv = self:GetInventory()
 	net.Start("fact_invsync")
 		net.WriteEntity(self)
-		net.WriteFloat(table.Count(inv.List[self]))
-		for k,v in pairs(self:GetInventory())do
+		net.WriteFloat(table.Count(inv))
+		for k,v in pairs(inv)do
 			net.WriteString(v.ClassName)
 			net.WriteFloat(v.Quantity)
 		end
@@ -61,9 +43,15 @@ function plymeta:SyncInventory(all) --this is a full sync of the inventory.
 		net.Send(self)
 	end
 end
-function plymeta:SaveInventory()
-	--todo
-end
-function plymeta:LoadInventory()
-	--todo
+
+function plymeta:ResetInventory()
+	self.Inventory = {}
+	self:GiveInvItem("fact_floor",4)
+	self:GiveInvItem("fact_inserter",10)
+	self:GiveInvItem("fact_importer",2)
+	self:GiveInvItem("fact_conveyor",15)
+	self:GiveInvItem("fact_assembler",2)
+	self:GiveInvItem("fact_pallet",2)
+	self:GiveInvItem("fact_miner",1)
+	self:SyncInventory()
 end

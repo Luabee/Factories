@@ -26,12 +26,10 @@ function recipes.Create(...)
 			local num,part = part:match("(%d*)(.+)")
 			num = tonumber(num)
 			local other = items.List[part]
-			if other then
-				if other.FactoryPart then
-					rec.madeIn = part
-				else
-					rec.ingredients[part] = (rec.ingredients[part] or 0) + (num or 1)
-				end
+			if other and other.FactoryPart then
+				rec.madeIn = part
+			else
+				rec.ingredients[part] = (rec.ingredients[part] or 0) + (num or 1)
 			end
 			
 		elseif isnumber(part) then

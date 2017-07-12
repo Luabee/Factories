@@ -141,6 +141,11 @@ end
 
 function grid.CanPlace(fac,x,y,w,h)
 	
+	if ConVars.Server.collisions:GetBool() then
+		local px,py = fac.Owner:GetPos():ToGrid(fac)
+		if math.InRange(px, x, x-(w-1)) and  math.InRange(py, y, y-(h-1)) then return false end --TODO: Make it test the player's hull.
+	end
+	
 	for checkX = x, x-w+1, -1 do
 		for checkY = y, y-h+1, -1 do
 			if not(grid.IsThereFloor(fac,checkX,checkY) and grid.IsThereSpace(fac,checkX,checkY)) then

@@ -29,17 +29,34 @@ ENT.BreakSounds = {
 }
 
 function ENT:Initialize()
-
+	
 	self:SetSize(self.Dimensions.w, self.Dimensions.h)
 	self:SetModel("models/props_junk/cardboard_box004a.mdl")
-	self:PhysicsInit(SOLID_VPHYSICS)
-	if SERVER then
-		local phy = self:GetPhysicsObject()
-		if IsValid(phy) then
-			phy:EnableMotion(false)
+	
+	self:SetupPreview()
+	
+	if ConVars.Server.collisions:GetBool() then
+		self:PhysicsInit(SOLID_VPHYSICS)
+		if SERVER then
+			local phy = self:GetPhysicsObject()
+			if IsValid(phy) then
+				phy:EnableMotion(false)
+			end
 		end
 	end
 	
+end
+
+function ENT:Save(tbl)
+	if self.Rotates then
+		tbl.yaw = self.Yaw
+	end
+	return tbl
+end
+function ENT:Load(tbl)
+	if self.Rotates then
+		self.Yaw = tbl.yaw
+	end
 end
 
 local place, Break = 0, 0
@@ -63,7 +80,7 @@ function ENT:GetBreakSound()
 end
 
 function ENT:SetupPreview()
-	--Setup the model to be rendered in the menu models and as a ghost before placing it.
+	--Setup the model once to be rendered in the menu models and as a ghost before placing it.
 end
 function ENT:PreDrawPreview()
 	--this is called each frame just before a model is rendered in the menu models and as a ghost before placing it.

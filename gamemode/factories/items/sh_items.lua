@@ -14,7 +14,7 @@ items.Base = items.Base or { --base item. All items have these functions and fie
 	Quantity = 1,
 	Owner = NULL,
 	EntClass = nil,
-	Model = "models/props_junk/cardboard_box004a.mdl",
+	Model = "models/hunter/blocks/cube025x025x025.mdl",
 	ConveyorScale = 1,
 	ConveyorAngle = Angle(0,0,0),
 	ConveyorOffset = Vector(0,0,0),
@@ -37,8 +37,11 @@ items.Base = items.Base or { --base item. All items have these functions and fie
 }
 
 
-function items.Create(class) --should only be done serverside, usually.
+function items.Create(class, quan)
 	local item = table.Copy(items.List[class])
+	if item then
+		item.Quantity = quan or 1
+	end
 	return item
 end
 

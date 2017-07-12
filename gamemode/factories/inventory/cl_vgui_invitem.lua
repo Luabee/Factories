@@ -98,8 +98,8 @@ function PANEL:Think()
 		end
 		
 		self:SetPos(self:GetParent():ScreenToLocal(mx,my))
-	elseif not IsValid(g_InHand) and not self:GetForSale() then
-		if self:IsHovered() then
+	elseif not IsValid(g_InHand) and not self:GetForSale() and self.id then
+		if self:IsHovered() and IsValid(g_SpawnMenu) then
 			g_SpawnMenu:SetItem(self:GetItem())
 		end
 	end
@@ -144,8 +144,11 @@ function PANEL:SetItem(i)
 	self.quan:SetText(i.Quantity)
 	
 	//Set the model
+	self.mdl:SetMaterial(i.Material)
 	self.mdl:SetModel(i.Model)
 	self.mdl:SetEntity(i.EntClass)
+	
+	self:SetTooltip(i.Name)
 	
 	
 end

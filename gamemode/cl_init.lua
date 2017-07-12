@@ -16,6 +16,13 @@ function GM:HUDPaint()
 
 end
 
+function GM:InitPostEntity()
+	local ply = LocalPlayer()
+	ply:SetStepSize(5)
+	ply:SetJumpPower(0)
+	ply:SetHull(Vector(-5,-5,0),Vector(5,5,64))
+end
+
 local no = {
 	CHudHealth = true,
 	CHudBattery = true,

@@ -1,10 +1,10 @@
 AddCSLuaFile()
 
 ENT.Base = "base_fact_itemholder"
-ENT.BreakSpeed = 2
+ENT.BreakSpeed = 1
 ENT.GridOffset = Vector(-48/2,-48/2,5)
 ENT.Dimensions = {w=2,h=2}
-ENT.Capacity = 64
+ENT.Capacity = 32
 
 function ENT:Initialize()
 	
@@ -46,6 +46,7 @@ function ENT:DrawItems()
 			local pos = oldpos + Vector(count % 4 * 15 - 24, math.floor((count % 16) / 4) * 15 - 23, math.floor(count / 16)*10 + 5)
 			count = count + 1
 			
+			self:SetMaterial(item.Material)
 			self:SetModel(item.Model)
 			self:SetModelScale(item.ConveyorScale,0)
 			self:SetAngles(oldang + item.ConveyorAngle)
@@ -57,6 +58,7 @@ function ENT:DrawItems()
 		end
 	end
 	
+	self:SetMaterial()
 	self:SetModelScale(1)
 	self:SetPos(oldpos) --reset
 	self:SetAngles(oldang)
@@ -95,6 +97,7 @@ function ENT:CanReceive(itemclass,input)
 end
 
 function ENT:SellAll()
+	if IsValid(self:GetMaker()) and self:GetMaker().FactorySync then return end
 	
 	local total = 0
 	for k,v in pairs(self.Holding) do

@@ -9,6 +9,10 @@ function inv.Print(ply)
     end
 end
 
+function plymeta:GetInventory()
+	return self.Inventory or {}
+end
+
 function plymeta:GetInvItem(class)
 	return self:GetInventory()[self:GetInvIndex(class)]
 end

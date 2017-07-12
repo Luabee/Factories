@@ -10,7 +10,6 @@ function ENT:Initialize()
 	
 	
 	self:SetupTables()
-	self:SetDroppingOff(true)
 	
 	self:SetModel("models/props_phx/construct/metal_wire1x2x2b.mdl") --frame
 	-- ring models/hunter/misc/platehole2x2.mdl
@@ -26,6 +25,16 @@ function ENT:Initialize()
 			end
 		end
 	end)
+	
+	if ConVars.Server.collisions:GetBool() then
+		self:PhysicsInit(SOLID_VPHYSICS)
+		if SERVER then
+			local phy = self:GetPhysicsObject()
+			if IsValid(phy) then
+				phy:EnableMotion(false)
+			end
+		end
+	end
 	
 	self.Rot = 0
 	
@@ -91,8 +100,9 @@ function ENT:DrawCrafting()
 		self:SetModelScale(item.ConveyorScale) --item
 		self:SetPos(oldpos + ang:Forward()*off.x + ang:Right()*off.y + ang:Up()*off.z + Vector(48/2,-48/2,25)) 
 		self:SetAngles(ang)
-		local right = timeang:Right()
-		local mat = self:GetMaterial()
+		local right = ang:Right()
+		-- local right = timeang:Right()
+		
 		self:SetMaterial("models/wireframe",true)
 		self:SetupBones()
 		render.EnableClipping(true)
@@ -100,13 +110,14 @@ function ENT:DrawCrafting()
 			self:DrawModel()
 		render.PopCustomClipPlane()
 		
-		self:SetMaterial(mat)
+		self:SetMaterial(item.Material)
 		self:SetupBones()
 		render.PushCustomClipPlane(-right,(-right):Dot(self:GetPos() + right *max * progress))
 			self:DrawModel()
 		render.PopCustomClipPlane()
 		render.EnableClipping(false)
 		
+		self:SetMaterial()
 		self:SetModelScale(1) --reset
 		self:SetPos(oldpos)
 		self:SetAngles(oldang)
@@ -123,9 +134,39 @@ function ENT:DrawTranslucent()
 	self:DrawCrafting()
 end
 
-function ENT:SetupIO(adjacent)
+
+function ENT:Save(tbl)
+	self:SellAll()
+	if self.Rotates then
+		tbl.yaw = self.Yaw
+	end
 	
-	//The inserters should handle this logic for us.
+	if self.GetImport then 
+		tbl.item = self:GetImport() 
+	elseif self.GetExport then
+		tbl.item = self:GetExport()
+	end
+	
+	
+	return tbl
+end
+function ENT:Load(tbl)
+	if self.Rotates then
+		self.Yaw = tbl.yaw
+	end
+	
+	if self.SetImport then 
+		self:SetImport(tbl.item) 
+	elseif self.SetExport then
+		self:SetExport(tbl.item)
+	end
+	
+	self.Receives = {}
+	for k,v in pairs(items.List[tbl.item].Recipe.ingredients) do
+		self.Receives[k] = true
+	end
+	self.Holding = {}
+	self.Using = {}
 	
 end
 
@@ -179,7 +220,7 @@ function ENT:CanReceive(itemclass,input)
 	if exitem then
 		local recipe = exitem.Recipe
 		local held = self.Using[itemclass]
-		if not held or held.Quantity < recipe.ingredients[itemclass] * 2 then --we can hold more.
+		if input:GetDroppingOff() or (not held or held.Quantity < recipe.ingredients[itemclass] * 2) then --we can hold more.
 			return true
 		end
 	end
@@ -234,6 +275,9 @@ function ENT:Craft()
 				
 				for class,quan in pairs(recipe.ingredients)do
 					self.Using[class].Quantity = self.Using[class].Quantity - quan
+					if self.Using[class].Quantity == 0 then
+						self.Using[class] = nil
+					end
 				end
 				
 				self.Emitted = false

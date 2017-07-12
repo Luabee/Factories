@@ -8,7 +8,7 @@ hook.Add("Initialize","fact_items_factory",function()
 	It also pulls items out of containers such as furnaces and assemblers.
 
 	Inserters always place their item on the far end of a conveyor.]]
-	ITEM.BasePrice = 40
+	ITEM.BasePrice = 60
 	ITEM.EntClass = "fact_inserter"
 	ITEM.ForSale = true
 	ITEM.FactoryPart = true
@@ -22,6 +22,7 @@ hook.Add("Initialize","fact_items_factory",function()
 	They have two separate sides which pull on different tracks.]]
 	ITEM.BasePrice = 15
 	ITEM.Model = "models/hunter/plates/plate1x1.mdl"
+	ITEM.Material = "phoenix_storms/futuristictrackramp_1-2"
 	ITEM.EntClass = "fact_conveyor"
 	ITEM.ForSale = true
 	ITEM.FactoryPart = true
@@ -32,7 +33,7 @@ hook.Add("Initialize","fact_items_factory",function()
 	ITEM.Desc = [[An assembler combines materials to create new items.
 
 	The resulting product must be pulled out with an inserter.]]
-	ITEM.BasePrice = 120
+	ITEM.BasePrice = 250
 	ITEM.Model = "models/props_phx/construct/metal_wire1x2x2b.mdl"
 	ITEM.EntClass = "fact_assembler"
 	ITEM.ForSale = true
@@ -44,7 +45,7 @@ hook.Add("Initialize","fact_items_factory",function()
 	ITEM.Desc = [[Furnaces cook single materials into their refined counterparts.
 
 	Only certain items can be smelted in a furnace.]]
-	ITEM.BasePrice = 90
+	ITEM.BasePrice = 200
 	ITEM.EntClass = "fact_furnace"
 	ITEM.ForSale = true
 	ITEM.Model = "models/props_c17/furniturefireplace001a.mdl"
@@ -56,7 +57,7 @@ hook.Add("Initialize","fact_items_factory",function()
 	ITEM.Desc = [[Miners pull ore from the earth.
 
 	Use inserters to place the ore onto conveyors.]]
-	ITEM.BasePrice = 800
+	ITEM.BasePrice = 1200
 	ITEM.EntClass = "fact_miner"
 	ITEM.Model = "models/props_phx/construct/metal_wire1x2x2b.mdl"
 	ITEM.ForSale = true
@@ -77,11 +78,12 @@ hook.Add("Initialize","fact_items_factory",function()
 	local ITEM = {}
 	ITEM.Name = "Factory Floor"
 	ITEM.Desc = [[Add on to your factory by building more floor space.]]
-	ITEM.BasePrice = 800
+	ITEM.BasePrice = 1000
 	ITEM.EntClass = "fact_floor"
 	ITEM.ForSale = true
 	ITEM.FactoryPart = true
 	ITEM.Model = "models/hunter/plates/plate4x4.mdl"
+	ITEM.Material = "phoenix_storms/metalfloor_2-3"
 	items.Register("fact_floor",ITEM)
 
 	local ITEM = {}
@@ -113,6 +115,6 @@ hook.Add("Initialize","fact_items_factory",function()
 	ITEM.Model = "models/props_junk/wood_pallet001a.mdl"
 	items.Register("fact_pallet",ITEM)
 	
-	hook.Run("InitFactoryItems")
+	hook.Run("InitFactoryItems") --Create our factory items before we make our other items.
 	
 end)

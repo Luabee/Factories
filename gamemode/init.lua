@@ -16,9 +16,19 @@ function GM:ShowTeam( ply )
 
 end
 
+
+
+function GM:EntityTakeDamage( )
+	return true
+end
+function GM:CanPlayerSuicide()
+	return false
+end
+
 function GM:PlayerInitialSpawn(ply)
 	ply:SetStepSize(5)
 	ply:SetJumpPower(0)
+	ply:SetHull(Vector(-5,-5,0),Vector(5,5,64))
 end
 
 function GM:PlayerSetModel(ply)
