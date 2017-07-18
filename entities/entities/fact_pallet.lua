@@ -4,7 +4,7 @@ ENT.Base = "base_fact_itemholder"
 ENT.BreakSpeed = 1
 ENT.GridOffset = Vector(-48/2,-48/2,5)
 ENT.Dimensions = {w=2,h=2}
-ENT.Capacity = 32
+ENT.Capacity = 16
 
 function ENT:Initialize()
 	
@@ -81,6 +81,7 @@ end
 
 function ENT:Think()
 	
+	self.Capacity = self:GetMaker():GetResearchLevel("logistics") * 16
 	
 end
 

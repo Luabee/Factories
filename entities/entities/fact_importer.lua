@@ -82,10 +82,10 @@ function ENT:Think()
 end
 
 function ENT:CanGive(itemclass,output)
-	return self:GetMaker():CanAfford(items.List[itemclass].BasePrice)
+	return self:GetMaker():CanAfford(math.floor(items.List[itemclass].BasePrice * 1.5))
 end
 function ENT:OnGive(item)
-	self:GetMaker():AddMoney(-item.BasePrice, self:GetPos()+Vector(0,0,20))
+	self:GetMaker():AddMoney(math.floor(-item.BasePrice*1.5), self:GetPos()+Vector(0,0,20))
 end
 
 if SERVER then

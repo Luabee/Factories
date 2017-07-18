@@ -1,5 +1,8 @@
 
-AddCSLuaFile()
+if SERVER then
+	AddCSLuaFile()
+	resource.AddFile("materials/factories/selected.png")
+end
 AccessorFunc(ENT,"Wide","Wide",FORCE_NUMBER)
 AccessorFunc(ENT,"Tall","Tall",FORCE_NUMBER)
 AccessorFunc(ENT,"Item","Item")
@@ -51,12 +54,14 @@ function ENT:Save(tbl)
 	if self.Rotates then
 		tbl.yaw = self.Yaw
 	end
+	tbl.level = self:GetLevel()
 	return tbl
 end
 function ENT:Load(tbl)
 	if self.Rotates then
 		self.Yaw = tbl.yaw
 	end
+	self:SetLevel(tbl.level)
 end
 
 local place, Break = 0, 0
@@ -94,6 +99,7 @@ function ENT:SetupDataTables()
 	self:NetworkVar("Entity", 0, "Maker") 
 	self:NetworkVar("Int", 0, "GridX") 
 	self:NetworkVar("Int", 1, "GridY") 
+	self:NetworkVar("Int", 2, "Level") 
 end
 
 function ENT:SnapToGrid(pos)

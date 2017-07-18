@@ -3,7 +3,7 @@ money = money or {}
 
 local plymeta = FindMetaTable("Player")
 
-function plymeta:SetMoney(new,nosave)
+function plymeta:SetMoney(new)
 	if SERVER then
 		self:SetNW2Float("fact_money", new)
 	end

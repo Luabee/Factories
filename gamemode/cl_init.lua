@@ -39,6 +39,7 @@ for i=12,48,2 do
 		size = i,
 		weight = 500,
 		extended=true,
+		emoji=true,
 	})
 end
 

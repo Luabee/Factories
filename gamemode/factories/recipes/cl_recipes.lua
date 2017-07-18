@@ -61,7 +61,12 @@ function PNL:Update()
 		
 		local into = vgui.Create("InvItem")
 		self:AddPanel(into)
-		into:SetItem(items.List[self.Recipe.madeIn])
+		for k,v in pairs(items.List)do
+			if k:find( self.Recipe.madeIn ) and v.Level == self.Recipe.level then
+				into:SetItem(v)
+				break
+			end
+		end
 		into.quan:SetVisible(false)
 		into.OnMousePressed = function() end
 	-- end

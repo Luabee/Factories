@@ -1,6 +1,6 @@
 
 
-timer.Create("fact_sync",300,0,function()
+timer.Create("fact_sync",600,0,function()
 	LocalPlayer().FactorySync = true
 	net.Start("fact_syncfactory")
 	net.SendToServer()

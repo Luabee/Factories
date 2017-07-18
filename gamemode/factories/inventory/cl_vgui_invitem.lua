@@ -73,13 +73,24 @@ function PANEL:Paint(w,h)
 	end
 	surface.DrawRect(0,0,w,h)
 	
+	-- surface.SetDrawColor(color_white)
+	-- surface.SetMaterial(research.LevelMats[self:GetItem().Level])
+	-- surface.DrawTexturedRectUV(0,0,w,h,0,0,w/600,h/600)
+	surface.SetDrawColor(research.LevelColors[self:GetItem().Level])
+	surface.DrawRect(0,0,w,h)
+	
+	-- surface.SetDrawColor(Color(0,0,0,240))
+	-- surface.DrawRect(0,0,w,h)
+	
+end
+
+function PANEL:PaintOver()
 	if !self:IsHovered() or (IsValid(g_InHand) and self:GetForSale()) then
 		surface.SetDrawColor(color_black)
 	else
 		surface.SetDrawColor(hovercol)
 	end
-	surface.DrawOutlinedRect(0,0,w,h)
-	
+	self:DrawOutlinedRect()
 end
 
 function PANEL:Think()
@@ -117,14 +128,14 @@ function PANEL:OnMousePressed(mc)
 		
 		self:SetInHand(true)
 		
-		mousein.Ghost:SetModel(self:GetItem().Model)
-		local sent = scripted_ents.GetStored(self:GetItem().EntClass)
-		if sent then
-			sent = sent.t
-			if sent.SetupPreview then
-				sent.SetupPreview(mousein.Ghost)
-			end
-		end
+		-- mousein.Ghost:SetModel(self:GetItem().Model)
+		-- local sent = scripted_ents.GetStored(self:GetItem().EntClass)
+		-- if sent then
+			-- sent = sent.t
+			-- if sent.SetupPreview then
+				-- sent.SetupPreview(mousein.Ghost)
+			-- end
+		-- end
 	elseif IsValid(g_InHand) then
 		inv.SellItem(g_InHand:GetItem().ClassName)
 	elseif mc == MOUSE_RIGHT then
@@ -147,6 +158,7 @@ function PANEL:SetItem(i)
 	self.mdl:SetMaterial(i.Material)
 	self.mdl:SetModel(i.Model)
 	self.mdl:SetEntity(i.EntClass)
+	self.mdl:SetLevel(i.Level)
 	
 	self:SetTooltip(i.Name)
 	

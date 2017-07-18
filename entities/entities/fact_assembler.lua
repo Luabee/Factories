@@ -61,7 +61,7 @@ function ENT.PostDrawPreview(self)
 	-- self:SetModelScale(.5)
 	self:SetModel("models/hunter/plates/platehole2x2.mdl")
 	self:SetupBones()
-	self:SetMaterial("phoenix_storms/wire/pcb_red")
+	self:SetMaterial(research.LevelModelMats[self:GetLevel()])
 	self:DrawModel()
 	self:SetMaterial()
 	
@@ -140,6 +140,7 @@ function ENT:Save(tbl)
 	if self.Rotates then
 		tbl.yaw = self.Yaw
 	end
+	tbl.level = self:GetLevel()
 	
 	if self.GetImport then 
 		tbl.item = self:GetImport() 
@@ -154,6 +155,7 @@ function ENT:Load(tbl)
 	if self.Rotates then
 		self.Yaw = tbl.yaw
 	end
+	self:SetLevel(tbl.level)
 	
 	if self.SetImport then 
 		self:SetImport(tbl.item) 
@@ -162,8 +164,10 @@ function ENT:Load(tbl)
 	end
 	
 	self.Receives = {}
-	for k,v in pairs(items.List[tbl.item].Recipe.ingredients) do
-		self.Receives[k] = true
+	if tbl.item and items.List[tbl.item] then
+		for k,v in pairs(items.List[tbl.item].Recipe.ingredients) do
+			self.Receives[k] = true
+		end
 	end
 	self.Holding = {}
 	self.Using = {}
@@ -294,6 +298,8 @@ if SERVER then
 		local class = net.ReadString()
 		local imp = net.ReadEntity()
 		if class == "" then return end
+		if not items.List[class] then return end
+		if !IsValid(imp) then return end
 		
 		if imp:GetMaker() != ply then return end
 		imp:SetExport(class)
@@ -303,13 +309,14 @@ if SERVER then
 		end
 		imp.Holding = {}
 		imp.Using = {}
+		imp.Progress = 0
 	end)
 else
 	function ENT:DoClick()
 		local netmsg = "fact_assembler"
 		
 		self:ShowSelectionMenu("Assembler", function(self,item)
-			return item.Recipe.madeIn == self:GetClass()
+			return item.Recipe.madeIn == self:GetClass() and item.Level <= self:GetLevel()
 		end,
 		
 		function(s)
@@ -327,6 +334,7 @@ else
 			end
 			self.Holding = {}
 			self.Using = {}
+			self.Progress = 0
 		end)
 		
 		

@@ -42,16 +42,13 @@ E = function(i) return Entity(i or 1) end
 
 --Load all files.
 function loadGMFiles(ext)
-	local _, folders = file.Find("gamemodes/factories/gamemode/factories/*","GAME")
+	local _, folders = file.Find("factories/gamemode/factories/*","LUA")
 	for k,fold in pairs(folders) do
 		-- print(fold)
-		local files = file.Find("gamemodes/factories/gamemode/factories/"..fold.."/"..ext.."*.lua","GAME")
+		local files = file.Find("factories/gamemode/factories/"..fold.."/"..ext.."*.lua","LUA")
 		for k2, f in SortedPairs(files) do
 			-- print(" ",f)
 			include("factories/"..fold.."/"..f)
-			if ext != "sv_" then
-				AddCSLuaFile("factories/"..fold.."/"..f)
-			end
 		end
 	end
 end

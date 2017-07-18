@@ -56,8 +56,25 @@ function ENT:OnRemove()
 	self:SellAll()
 end
 
+function ENT:PostDrawPreview()
+	local oldpos, oldang = self:GetPos(), self:GetAngles()
+	self:SetAngles(oldang+Angle(0,-90,0))
+	self:SetPos(oldpos + self:GetUp() * 1 + self:GetRight()*.001)
+	self:SetModel("models/hunter/plates/plate025x1.mdl")
+	self:SetMaterial(research.LevelModelMats[self:GetLevel()])
+	self:SetupBones()
+	self:DrawModel()
+	
+	self:SetModel("models/hunter/plates/plate1x1.mdl")
+	self:SetMaterial("phoenix_storms/futuristictrackramp_1-2")
+	self:SetPos(oldpos)
+	self:SetAngles(oldang)
+end
+
 function ENT:Save(tbl)
 	tbl.yaw = self.Yaw
+	
+	tbl.level = self:GetLevel()
 	
 	tbl.Holding = {}
 	for k,v in pairs(self.Holding) do
@@ -74,6 +91,7 @@ function ENT:Save(tbl)
 end
 function ENT:Load(tbl)
 	self.Yaw = tbl.yaw
+	self:SetLevel(tbl.Level or 1)
 	
 	for k,v in pairs(tbl.Holding) do
 		self.Holding[k] = items.Create(v.class,v.quan)
@@ -249,10 +267,6 @@ function ENT:GetInputTrack(input, track) --track is optional. Use it if the inpu
 	return false --failsafe
 end
 
-function ENT.SetupPreview(self)
-	self:SetMaterial("phoenix_storms/futuristictrackramp_1-2")
-end
-
 hook.Add("PlayerTick","fact_conveyormove",function(ply,mv)
 	local pos = mv:GetOrigin()
 	local fac = ply:GetFactory()
@@ -266,7 +280,7 @@ hook.Add("PlayerTick","fact_conveyormove",function(ply,mv)
 end)
 
 local s = ENT.Speed
-hook.Add("Think","resetconvey",function()
+hook.Add("Think","resetconvey",function() --TODO: Make this nicer.
 	if not timer.Exists("fact_conveyors") then
 		timer.Create("fact_conveyors",s / (smoothness/5)/3, 0, function()
 			for k,v in pairs(conveyors)do
@@ -288,14 +302,23 @@ if CLIENT then
 	function ENT:Draw()
 		
 		local oldpos = self:GetPos()
+		local oldang = self:GetAngles()
 		local normal = -self:GetForward() -- Everything "behind" this normal will be clipped
-		local p =  oldpos + self:GetForward() * (47 - crawl)
+		local p = oldpos + self:GetForward() * (47 - crawl)
 		local position = normal:Dot( oldpos + self:GetForward() * 24 ) -- self:GetPos() is the origin of the clipping plane
 
 		local oldEC = render.EnableClipping( true )
 		render.PushCustomClipPlane( normal, position )
 
 		self:SetRenderOrigin(p)
+		self:SetModel("models/hunter/plates/plate1x1.mdl")
+		self:SetupBones()
+		self:DrawModel()
+		self:SetRenderOrigin(p + Vector(0,0,1))
+		self:SetRenderAngles(oldang+Angle(0,-90,0))
+		self:SetModel("models/hunter/plates/plate025x1.mdl")
+		self:SetMaterial(research.LevelModelMats[self:GetLevel()])
+		self:SetupBones()
 		self:DrawModel()
 		
 		render.PopCustomClipPlane()
@@ -305,6 +328,12 @@ if CLIENT then
 		position = normal:Dot( oldpos - self:GetForward() * 24 ) -- self:GetPos() is the origin of the clipping plane
 		render.PushCustomClipPlane( normal, position )
 		
+		self:SetRenderOrigin(p + Vector(0,0,1))
+		self:SetupBones()
+		self:DrawModel()
+		self:SetMaterial("phoenix_storms/futuristictrackramp_1-2")
+		self:SetModel("models/hunter/plates/plate1x1.mdl")
+		self:SetRenderAngles(oldang)
 		self:SetRenderOrigin(p)
 		self:SetupBones()
 		self:DrawModel()
@@ -313,6 +342,7 @@ if CLIENT then
 		
 		render.EnableClipping( oldEC )
 		self:SetRenderOrigin(oldpos)
+		self:SetRenderAngles(oldang)
 		
 		self:DrawItems()
 	end

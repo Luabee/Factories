@@ -2,6 +2,7 @@
 local PNL = {}
 
 AccessorFunc(PNL,"Material","Material")
+AccessorFunc(PNL,"Level","Level",FORCE_NUMBER)
 
 function PNL:Init()
 	self:SetFOV( 65 )
@@ -26,6 +27,8 @@ function PNL:DrawModel()
 		previous = curparent
 	end
 	render.SetScissorRect( leftx, topy, rightx, bottomy, true )
+	render.PushFilterMag(TEXFILTER.ANISOTROPIC)
+	render.PushFilterMin(TEXFILTER.ANISOTROPIC)
 
 	local ret = self:PreDrawModel( self.Entity )
 	if ( ret != false ) then
@@ -43,6 +46,8 @@ function PNL:DrawModel()
 		
 		self:PostDrawModel( self.Entity )
 	end
+	render.PopFilterMag()
+	render.PopFilterMin()
 
 	render.SetScissorRect( 0, 0, 0, 0, false )
 
@@ -54,6 +59,7 @@ function PNL:SetModel(m)
 		return
 	end
 	self.BaseClass.SetModel(self,m)
+	self.Entity.GetLevel = function() return self:GetLevel() end
 	
 	self:CenterCamera()
 end
@@ -77,20 +83,29 @@ function PNL:SetEntity(class)
 	
 end
 
+
 function PNL:CenterCamera()
 	local mn, mx = self.Entity:GetRenderBounds()
-	if self.sent and self.sent.ModelScale then
-		mn, mx = mn * self.sent.PreviewScale, mx * self.sent.PreviewScale
+	if self.sent and self.sent.PreviewScale then
+		mn, mx = mn / self.sent.PreviewScale, mx / self.sent.PreviewScale
 	end
 	local size = 0
 	size = math.max( size, math.abs(mn.x) + math.abs(mx.x) )
 	size = math.max( size, math.abs(mn.y) + math.abs(mx.y) )
 	size = math.max( size, math.abs(mn.z) + math.abs(mx.z) ) 
-	self:SetCamPos( Vector( size, size, size ) )
+	self:SetCamPos( Vector( size*.85, size*.85, size*.85 ) )
 	self:SetLookAt( (mn + mx)/2 )
 end
 
+
 function PNL:LayoutEntity(e)
+	-- Point camera toward the look pos
+	local lookAng = ( self.vLookatPos-self.vCamPos ):Angle()
+
+	-- Rotate the look angles based on incrementing yaw value
+	lookAng:RotateAroundAxis( Vector( 0, 0, 1 ), math.sin((RealTime() + self.rand)) * 30 )
+
+	-- Set camera look angles
 	e:SetAngles(Angle(0, math.sin((RealTime() + self.rand)) * 30 ,0))
 end
 

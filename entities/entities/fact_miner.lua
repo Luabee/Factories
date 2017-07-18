@@ -65,7 +65,7 @@ function ENT.PostDrawPreview(self)
 	
 	--draw crane
 	-- self:SetMaterial("phoenix_storms/dome")
-	self:SetMaterial("phoenix_storms/wire/pcb_red")
+	self:SetMaterial(research.LevelModelMats[self:GetLevel()])
 	self:SetAngles(oldang)
 	if animate then
 		self:SetPos(oldpos+Vector(30 + (math.sin(self.Time/2) * 25),-23.7,35))
@@ -161,7 +161,7 @@ else
 		local netmsg = "fact_importer"
 		
 		self:ShowSelectionMenu("Miner", function(self,item)
-			return item.Recipe.madeIn == self:GetClass()
+			return item.Recipe.madeIn == self:GetClass() and item.Level <= self:GetLevel()
 		end,
 		
 		function(s)

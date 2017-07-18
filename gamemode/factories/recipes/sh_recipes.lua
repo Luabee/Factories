@@ -8,6 +8,7 @@ function recipes.Set(itemclass, ...)
 	
 	if item then
 		item.Recipe = recipes.Create(...)
+		item.Level = math.max( item.Level, item.Recipe.level)
 	end
 	
 	return rec
@@ -18,18 +19,19 @@ function recipes.Create(...)
 	local rec = {
 		ingredients = {},
 		time = 1,
-		madeIn = "fact_assembler"
+		madeIn = "fact_importer",
+		level = 1,
 	}
 	
 	for k,part in pairs(args) do
 		if isstring(part) then
-			local num,part = part:match("(%d*)(.+)")
-			num = tonumber(num)
+			local num,part,level = part:match("(%d*)(%D+)(%d*)")
 			local other = items.List[part]
 			if other and other.FactoryPart then
 				rec.madeIn = part
+				rec.level = tonumber(level) or 1
 			else
-				rec.ingredients[part] = (rec.ingredients[part] or 0) + (num or 1)
+				rec.ingredients[part] = (rec.ingredients[part] or 0) + (tonumber(num) or 1)
 			end
 			
 		elseif isnumber(part) then

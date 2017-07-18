@@ -1,0 +1,9 @@
+"UnlitGeneric"
+{
+	"$basetexture" "factories/tech/tech_white"
+	"$color" "{255 125 255}"
+	$vertexcolor 1
+	$vertexalpha 1
+}
+
+

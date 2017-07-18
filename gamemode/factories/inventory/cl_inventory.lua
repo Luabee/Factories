@@ -53,15 +53,30 @@ end)
 
 function CreateInvMenu()
 	if IsValid(g_PopUp) then g_PopUp:Close() return end
-	if IsValid(g_SpawnMenu) then g_SpawnMenu:SetVisible(true) return end
+	if IsValid(g_SpawnMenu) then 
+		g_SpawnMenu:SetVisible(true) 
+		g_SpawnMenu.shop:Populate() 
+		return
+	end
 	
 	local frame = vgui.Create("DFrame")
+	g_SpawnMenu = frame
 	frame:SetSize(700,400)
 	frame:Center()
 	frame:MakePopup()
 	frame:SetKeyboardInputEnabled(false)
 	frame:SetDeleteOnClose(false)
 	frame:SetTitle("Factory Components")
+	frame.lblTitle:SetFont("factRoboto24")
+	frame.lblTitle:SetTextColor(color_white)
+	frame.lblTitle:SetContentAlignment(7)
+	frame.lblTitle:SizeToContents()
+	function frame:Paint(w,h)
+		surface.SetDrawColor(Color(0,0,0,220))
+		surface.DrawRect(0,0,w,h)
+		surface.SetDrawColor(color_black)
+		self:DrawOutlinedRect()
+	end
 	function frame:Close()
 		self:SetVisible(false)
 		if IsValid(g_InHand) then
@@ -174,14 +189,19 @@ function CreateInvMenu()
 	shop:SetSpaceY( 5 ) //Sets the space in between the panels on the X Axis by 5
 	shop:SetSpaceX( 5 ) //Sets the space in between the panels on the Y Axis by 5
 	shop.OnMousePressed = shopScroll.OnMousePressed
-	for k,v in pairs(items.List) do //populate the store.
-		if v.FactoryPart then
-			local ListItem = shop:Add( "InvItem" ) //Add DPanel to the DIconLayout
-			ListItem:SetForSale(true)
-			ListItem:SetItem(v)
-			
+	frame.shop = shop
+	function shop:Populate()
+		self:Clear()
+		for k,v in SortedPairsByMemberValue(items.List,"Level") do //populate the store.
+			if v.FactoryPart and (!v.NeedsResearch or LocalPlayer():GetResearchLevel(v.NeedsResearch) >= v.Level) then
+				local ListItem = self:Add( "InvItem" ) //Add DPanel to the DIconLayout
+				ListItem:SetForSale(true)
+				ListItem:SetItem(v)
+				
+			end
 		end
 	end
+	shop:Populate()
 	
 	
 	//Selected item details side
@@ -190,9 +210,12 @@ function CreateInvMenu()
 	selectedSide:DockMargin(0,20,0,0)
 	selectedSide:SetWide(343)
 	function selectedSide:Paint(w,h)
-		draw.RoundedBox(4,0,0,w,h,Color(0,0,0,100))
-		draw.RoundedBoxEx(4,0,0,w,59,Color(0,0,0,150),true,true,false,false)
-		draw.RoundedBoxEx(4,0,h-132,w,132,Color(0,0,0,150),false,false,true,true)
+		draw.RoundedBox(0,0,0,w,h,Color(80,80,80,255))
+		draw.RoundedBoxEx(0,0,0,w,59,Color(0,0,0,170),true,true,false,false)
+		-- draw.RoundedBoxEx(0,0,h-132,w,132,Color(0,0,0,170),false,false,true,true)
+		draw.RoundedBoxEx(0,0,h-100,w,100,Color(0,0,0,170),false,false,true,true)
+		surface.SetDrawColor(color_black)
+		self:DrawOutlinedRect()
 	end
 	
 	//Title of selected item
@@ -221,7 +244,7 @@ function CreateInvMenu()
 	local preview = vgui.Create("ItemPreview",selectedSide)
 	preview:Dock(TOP)
 	preview:DockMargin(0,5,5,0)
-	preview:SetTall(155)
+	preview:SetTall(187)
 	frame.preview = preview
 	
 	local preDescScr = vgui.Create("DScrollPanel",selectedSide)
@@ -272,6 +295,7 @@ function CreateInvMenu()
 			self.Item = i
 			self.preview:SetMaterial(i.Material)
 			self.preview:SetModel(i.Model)
+			self.preview:SetLevel(i.Level)
 			self.preview:SetEntity(i.EntClass)
 			preTitle:SetText(i.Name)
 			preDescLbl:SetText(i.Desc)
@@ -291,7 +315,6 @@ function CreateInvMenu()
 		frame:SetItem(g_InHand:GetItem())
 	end
 	
-	g_SpawnMenu = frame
 end
 hook.Add("OnSpawnMenuOpen","fact_openInventory",function()
 	if IsValid(g_SpawnMenu) and g_SpawnMenu:IsVisible() then

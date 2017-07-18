@@ -1,4 +1,9 @@
-AddCSLuaFile()
+
+if SERVER then 
+	AddCSLuaFile()
+	resource.AddFile("sound/factories/chaching.mp3")
+	resource.AddFile("sound/factories/coins.mp3")
+end
 
 ENT.Base = "base_fact"
 
@@ -39,6 +44,7 @@ function ENT:SetupDataTables()
 	self:NetworkVar("Entity", 0, "Maker") 
 	self:NetworkVar("Int", 0, "GridX") 
 	self:NetworkVar("Int", 1, "GridY") 
+	self:NetworkVar("Int", 2, "Level") 
 	self:NetworkVar("Bool", 0, "PickingUp") 
 	self:NetworkVar("Bool", 1, "DroppingOff") 
 	
@@ -63,6 +69,7 @@ function ENT:Save(tbl)
 	if self.Rotates then
 		tbl.yaw = self.Yaw
 	end
+	tbl.level = self:GetLevel()
 	
 	tbl.Holding, tbl.Using, tbl.Receives, tbl.Requesting = {}, {}, {}, {}
 	for k,v in pairs(self.Holding) do
@@ -90,6 +97,7 @@ function ENT:Load(tbl)
 	if self.Rotates then
 		self.Yaw = tbl.yaw
 	end
+	self:SetLevel(tbl.level)
 	
 	for k,v in pairs(tbl.Holding) do
 		self.Holding[k] = items.Create(v.class,v.quan)
@@ -341,10 +349,12 @@ function ENT:ShowSelectionMenu(name, filter, onclose)
 	bg:SetPos(5,30)
 	function bg:Paint(w,h)
 
-		if frame.Item and frame.Item.FinishedProduct then
-			surface.SetDrawColor(bgcol_finishedProduct)
-		else
-			surface.SetDrawColor(bgcol)
+		if frame.Item then
+		-- if frame.Item and frame.Item.FinishedProduct then
+			surface.SetDrawColor(research.LevelColors[frame.Item.Level])
+			-- surface.SetDrawColor(bgcol_finishedProduct)
+		-- else
+			-- surface.SetDrawColor(bgcol)
 		end
 		surface.DrawRect(0,0,w,h)
 	end
@@ -355,6 +365,7 @@ function ENT:ShowSelectionMenu(name, filter, onclose)
 		if item.EntClass then
 			selected:SetEntity(item.EntClass)
 		end
+		selected:SetLevel(item.Level)
 		selected:SetMaterial(item.Material)
 	end
 	function selected:PaintOver(w,h)
@@ -436,6 +447,7 @@ function ENT:ShowSelectionMenu(name, filter, onclose)
 			if item.EntClass then
 				selected:SetEntity(item.EntClass)
 			end
+			selected:SetLevel(item.Level)
 			selected:SetMaterial(item.Material)
 			title:SetText(item.Name)
 			price:SetText("$"..string.Comma(item.BasePrice))
@@ -454,10 +466,16 @@ function ENT:ShowSelectionMenu(name, filter, onclose)
 		s:Clear()
 		
 		local tbl = {}
-		for k,v in SortedPairsByMemberValue(items.List,"Price") do --descending order doesn't work so we do it manually
+		for k,v in pairs(items.List) do --descending order doesn't work so we do it manually
 			tbl[#tbl+1] = v
 		end
-		tbl = table.Reverse(tbl)
+		
+		table.sort(tbl, function(a,b)
+			if a.Level != b.Level then
+				return a.Level > b.Level
+			end
+			return a.BasePrice > b.BasePrice
+		end)
 		
 		for k,v in ipairs(tbl) do //populate the store.
 			if filter(self,v) then
@@ -470,6 +488,7 @@ function ENT:ShowSelectionMenu(name, filter, onclose)
 					if v.EntClass then
 						selected:SetEntity(v.EntClass)
 					end
+					selected:SetLevel(v.Level)
 					selected:SetMaterial(v.Material)
 					title:SetText(v.Name)
 					price:SetText("$"..string.Comma(v.BasePrice))

@@ -32,7 +32,7 @@ hook.Add("InitFactoryItems","fact_items_basic",function()
 	ITEM.Model = "models/props_canal/mattpipe.mdl"
 	-- ITEM.Material = "phoenix_storms/bluemetal"
 	-- ITEM.ConveyorScale = .25
-	ITEM.ConveyorAngle = Angle(0,90,0)
+	ITEM.ConveyorAngle = Angle(90,90,0)
 	ITEM.Recipe = recipes.Create("fact_iron_bar","fact_assembler",.5)
 	items.Register("fact_pipe", ITEM)
 	
@@ -42,9 +42,11 @@ hook.Add("InitFactoryItems","fact_items_basic",function()
 	ITEM.BasePrice = 4
 	ITEM.ForSale = true
 	ITEM.Model = "models/mechanics/solid_steel/i_beam_4.mdl"
+	ITEM.Level = 2
 	ITEM.ConveyorScale = .5
 	ITEM.ConveyorAngle = Angle(0,90,0)
-	ITEM.Recipe = recipes.Create("fact_iron_bar","fact_furnace",2)
+	ITEM.ConveyorOffset = Vector(0,0,1)
+	ITEM.Recipe = recipes.Create("fact_iron_bar","fact_furnace2",2)
 	items.Register("fact_steel_bar", ITEM)
 
 	local ITEM = {}
@@ -97,7 +99,8 @@ hook.Add("InitFactoryItems","fact_items_basic",function()
 	ITEM.Model = "models/hunter/plates/plate1x1.mdl"
 	ITEM.Material = "phoenix_storms/wire/pcb_green"
 	ITEM.ConveyorScale = .25
-	ITEM.Recipe = recipes.Create("2fact_wire","fact_iron_bar","fact_assembler",.8)
+	ITEM.Level = 2
+	ITEM.Recipe = recipes.Create("2fact_wire","fact_iron_bar","fact_assembler2",.8)
 	items.Register("fact_circuit", ITEM)
 
 	local ITEM = {}
@@ -115,10 +118,10 @@ hook.Add("InitFactoryItems","fact_items_basic",function()
 	ITEM.Desc = [[A chunk of rubber.]]
 	ITEM.BasePrice = 2
 	ITEM.ForSale = true
-	ITEM.ConveyorScale = 1
+	ITEM.Level = 2
 	ITEM.Model = "models/XQM/cylinderx1.mdl"
 	ITEM.Material = "models/xqm/panel360_diffuse"
-	-- ITEM.Recipe = recipes.Create("fact_miner",1)
+	ITEM.Recipe = recipes.Create("fact_miner2",1)
 	items.Register("fact_rubber", ITEM)
 	
 	local ITEM = {}
@@ -129,19 +132,9 @@ hook.Add("InitFactoryItems","fact_items_basic",function()
 	ITEM.ForSale = true
 	ITEM.Model = "models/props_phx/wheels/magnetic_small.mdl"
 	ITEM.ConveyorScale = 1.1
-	ITEM.Recipe = recipes.Create("3fact_rubber","1fact_iron_bar","fact_assembler",5)
+	ITEM.Level = 2
+	ITEM.Recipe = recipes.Create("3fact_rubber","1fact_iron_bar","fact_assembler2",5)
 	items.Register("fact_tire", ITEM)
 	
-	local ITEM = {}
-	ITEM.Name = "Research Pack 1"
-	ITEM.Desc = [[A pack of low-level research materials. Place them in a Lab to gain research progress.]]
-	ITEM.BasePrice = 1
-	ITEM.FinishedProduct = false
-	ITEM.ForSale = false
-	ITEM.Model = "models/props_lab/jar01b.mdl"
-	ITEM.Material = "phoenix_storms/wire/pcb_red"
-	ITEM.ConveyorScale = 1
-	ITEM.Recipe = recipes.Create("1fact_gear","1fact_wire","fact_assembler",5)
-	items.Register("fact_research_1", ITEM)
 	
 end)

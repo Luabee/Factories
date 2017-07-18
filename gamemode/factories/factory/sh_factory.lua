@@ -49,12 +49,14 @@ function plymeta:ResetFactory()
 	table.insert(fac.Ents, floor)
 	
 	timer.Simple(1,function()
-		local gridx, gridy = (pos + Vector( -grid.Size*.5, -grid.Size*.5, -1)):ToGrid(fac)
-		grid.AddFloor(fac, gridx, gridy, 4, 4, floor)
-		self:SetPos(pos+Vector(-grid.Size*.5,-grid.Size*.5,5))
-		-- self:SendLua("fact.Loading = false")
-		
-		self:ResetInventory()
+		if IsValid(self) then
+			local gridx, gridy = (pos + Vector( -grid.Size*.5, -grid.Size*.5, -1)):ToGrid(fac)
+			grid.AddFloor(fac, gridx, gridy, 4, 4, floor)
+			self:SetPos(pos+Vector(-grid.Size*.5,-grid.Size*.5,5))
+			-- self:SendLua("fact.Loading = false")
+			
+			self:ResetInventory()
+		end
 	end)
 end
 
@@ -87,6 +89,7 @@ function fact.PlaceObject(ply,item,gridX, gridY,rot,nosound)
 			ent:SetGridPos(gridX, gridY)
 			ent.Item = item
 			ent:SetItemClass(item.ClassName)
+			ent:SetLevel(item.Level or 0)
 			ent:Spawn()
 			if not nosound then
 				sound.Play( ent:GetPlaceSound(), ent:GetPos(), 75, 100, 1 )
@@ -141,6 +144,13 @@ if SERVER then
 			self.FactorySync = false
 		end)
 	end
+else
+	function fact.Sync()
+		LocalPlayer().FactorySync = true
+		net.Start("fact_syncfactory")
+		net.SendToServer()
+	end
+	concommand.Add("fact_sync",function() timer.Simple(.01,fact.Sync) end)
 end
 
 function plymeta:GetFactory()

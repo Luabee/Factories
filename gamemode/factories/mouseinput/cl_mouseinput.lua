@@ -161,11 +161,12 @@ hook.Add("PostDrawTranslucentRenderables","fact_GhostPlacement",function(sky)
 		if class and e then
 			
 			e = e.t
-			if mousein.Ghost.class != class then
+			if mousein.Ghost.class != item.ClassName then
 				mousein.Ghost:Remove()
 				mousein.Ghost = ClientsideModel(item.Model, RENDERMODE_OTHER)
+				mousein.Ghost.GetLevel = function() return item.Level end
 				mousein.Ghost:SetNoDraw(true)
-				mousein.Ghost.class = class
+				mousein.Ghost.class = item.ClassName
 				if e.SetupPreview then
 					e.SetupPreview(mousein.Ghost)
 				end

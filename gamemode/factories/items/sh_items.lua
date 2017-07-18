@@ -12,6 +12,7 @@ items.Base = items.Base or { --base item. All items have these functions and fie
 	FactoryPart = false,
 	Recipe = {},
 	Quantity = 1,
+	Level = 1,
 	Owner = NULL,
 	EntClass = nil,
 	Model = "models/hunter/blocks/cube025x025x025.mdl",
@@ -46,6 +47,7 @@ function items.Create(class, quan)
 end
 
 function items.Register(class, item, baseclass) --classname, item table, baseclass to inherit from. Nil means it will inherit from the root base.
+	item = table.Copy(item)
 	baseclass = items.List[baseclass] or items.Base
 	item.ClassName = class
 	table.Inherit(item,baseclass)

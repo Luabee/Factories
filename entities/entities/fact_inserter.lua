@@ -2,6 +2,7 @@
 if SERVER then
 	AddCSLuaFile()
 	util.AddNetworkString("fact_insertersync")
+	resource.AddFile("materials/factories/selected_inserter.png")
 end
 
 AccessorFunc(ENT,"PickingUp","PickingUp",FORCE_BOOL)
@@ -10,7 +11,7 @@ AccessorFunc(ENT,"DroppingOff","DroppingOff",FORCE_BOOL)
 ENT.Base = "base_fact_itemholder"
 ENT.BreakSpeed = .35
 ENT.InsertSpeed = .95
-ENT.PreviewScale = 1.5
+ENT.PreviewScale = 1.2
 ENT.IsInserter = true
 ENT.Rotates = true
 ENT.GridOffset = Vector(0,0,15)
@@ -81,6 +82,7 @@ function ENT:SetupDataTables()
 	self:NetworkVar("Entity", 0, "Maker") 
 	self:NetworkVar("Int", 0, "GridX") 
 	self:NetworkVar("Int", 1, "GridY") 
+	self:NetworkVar("Int", 2, "Level") 
 	-- self:NetworkVar("Bool", 0, "PickingUp") 
 	-- self:NetworkVar("Bool", 1, "DroppingOff") 
 end
@@ -97,13 +99,13 @@ function ENT.SetupPreview(self)
 		self.magnet:SetPos(self:GetPos() + vec)
 		self.magnet:SetAngles(ang + Angle(45,0,0))
 		self.magnet:SetNoDraw(true)
+		self.magnet:SetMaterial(research.LevelModelMats[self:GetLevel()])
 	end
 end
 function ENT.PostDrawPreview(self)
 	local oldpos = self:GetPos()
 	local vec = Vector(-25,0,20)
 	local ang = self:GetRenderAngles() or self:GetAngles()
-	vec:Rotate(ang)
 	
 	if self.IsInserter then
 		
@@ -124,8 +126,9 @@ function ENT.PostDrawPreview(self)
 		end
 	end
 	
+	vec:Rotate(ang)
 	self.magnet:SetModel("models/props_wasteland/cranemagnet01a.mdl")
-	self.magnet:SetMaterial()
+	self.magnet:SetMaterial(research.LevelModelMats[self:GetLevel()])
 	self.magnet:SetModelScale(.15)
 	self.magnet:SetPos(self:GetPos() + vec)
 	self.magnet:SetAngles(ang + Angle(45,0,0))
@@ -184,6 +187,7 @@ function ENT:Think()
 	
 	self:NextThink(CurTime())
 	if CLIENT then
+		-- self:SetNextClientThink(CurTime()+engine.TickInterval())
 		self:SetNextClientThink(CurTime())
 	end
 	return true

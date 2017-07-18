@@ -5,6 +5,18 @@ include( 'shared.lua' )
 
 loadGMFiles("sv_")
 
+local _, folders = file.Find("factories/gamemode/factories/*","LUA")
+for k,fold in pairs(folders) do
+	-- print(fold)
+	local files = file.Find("factories/gamemode/factories/"..fold.."/*.lua","LUA")
+	for k2, f in SortedPairs(files) do
+		if !f:match("sv_") then
+			AddCSLuaFile("factories/"..fold.."/"..f)
+			-- print("factories/"..fold.."/"..f)
+		end
+	end
+end
+
 
 --[[---------------------------------------------------------
 	Show the default team selection screen

@@ -40,28 +40,40 @@ function ENT:Initialize()
 	
 end
 
--- function ENT:OnRemove()
-	-- self.BaseClass.OnRemove(self)
-	-- self:StopSound("ambient/fire/fire_big_loop1.wav")
--- end
-
 function ENT:SetupDataTables()
 	self.BaseClass.SetupDataTables(self)
 	self:NetworkVar("String",1,"Export")
 end
 
-local mat = Matrix()
-mat:Scale(Vector(1.83,1,1))
-function ENT.SetupPreview(self)
-	if CLIENT then 
-		self:EnableMatrix("RenderMultiply",mat)
-	end
+local mat1 = Matrix()
+mat1:Scale(Vector(1.83,1,1))
+local mat2 = Matrix()
+mat2:Scale(Vector(.345,.35,8.2))
+function ENT.PostDrawPreview(self)
+	
+	local oldpos = self:GetPos()
+	local oldang = self:GetAngles()
+	
+	self:EnableMatrix("RenderMultiply",mat2)
+	self:SetAngles(oldang)
+	self:SetPos(oldpos + self:GetForward() * 6 + self:GetRight() * 0 + self:GetUp() * -20) --ring
+	self:SetModel("models/hunter/plates/platehole2x2.mdl")
+	self:SetupBones()
+	self:SetMaterial(research.LevelModelMats[self:GetLevel()])
+	self:DrawModel()
+	
+	self:SetMaterial()
+	self:EnableMatrix("RenderMultiply",mat1)
+	self:SetPos(oldpos) --reset
+	self:SetAngles(oldang)
+	self:SetModel("models/props_c17/furniturefireplace001a.mdl")
+	self:SetupBones()
+	
 end
 
-function ENT:SetupIO(adjacent)
-	
-	//The inserters should handle this logic for us.
-	
+function ENT:Draw()
+	self:DrawModel()
+	self:PostDrawPreview()
 end
 
 function ENT:GetSelectionMat()
@@ -182,6 +194,7 @@ function ENT:Save(tbl)
 	if self.Rotates then
 		tbl.yaw = self.Yaw
 	end
+	tbl.level = self:GetLevel()
 	
 	if self.GetImport then 
 		tbl.item = self:GetImport() 
@@ -196,6 +209,7 @@ function ENT:Load(tbl)
 	if self.Rotates then
 		self.Yaw = tbl.yaw
 	end
+	self:SetLevel(tbl.level)
 	
 	if self.SetImport then 
 		self:SetImport(tbl.item) 
@@ -204,8 +218,10 @@ function ENT:Load(tbl)
 	end
 	
 	self.Receives = {}
-	for k,v in pairs(items.List[tbl.item].Recipe.ingredients) do
-		self.Receives[k] = true
+	if tbl.item and items.List[tbl.item] then
+		for k,v in pairs(items.List[tbl.item].Recipe.ingredients) do
+			self.Receives[k] = true
+		end
 	end
 	self.Holding = {}
 	self.Using = {}
@@ -218,7 +234,7 @@ else
 		local netmsg = "fact_assembler"
 		
 		self:ShowSelectionMenu("Furnace", function(self,item)
-			return item.Recipe.madeIn == self:GetClass()
+			return item.Recipe.madeIn == self:GetClass() and item.Level <= self:GetLevel()
 		end,
 		
 		function(s)

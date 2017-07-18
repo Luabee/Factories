@@ -1,24 +1,30 @@
 local plymeta = FindMetaTable("Player")
 util.AddNetworkString("fact_load")
 
+local function report(err)
+	ErrorNoHalt("[ERROR! Failed to load player's Factory/Money/Inventory/Research!]: "..err)
+	debug.Trace()
+	-- ErrorNoHalt(debug.traceback( nil, "[Failed to load player's Factory/Money/Inventory/Research!]"..err, 1 ))
+end
 hook.Add("PlayerInitialSpawn","fact_loadEverything",function(ply)
 	ply.Loading = true
 	fact.Create(ply)
 	timer.Simple(3,function()
-		ply:LoadMoney()
-		ply:LoadFactory()
-		ply:LoadInventory()
+		xpcall( ply.LoadMoney, report, ply )
+		xpcall( ply.LoadFactory, report, ply)
+		xpcall( ply.LoadInventory, report, ply)
+		xpcall( ply.LoadResearch, report, ply)
 		ply.Loading = false
 	end)
 end)
 
-hook.Add("EntityRemoved","fact_saveEverything",function(ply)
-	if ply:IsPlayer() then
-		
+hook.Add("PlayerDisconnected","fact_saveEverything",function(ply)
+	-- if ply:IsPlayer() then
 		--save all shit.
 		ply:SaveMoney()
 		ply:SaveInventory()
 		ply:SaveFactory()
+		ply:SaveResearch()
 		
 		--remove all ents.
 		for k,v in pairs(ply:GetFactory().Ents)do
@@ -35,7 +41,7 @@ hook.Add("EntityRemoved","fact_saveEverything",function(ply)
 			-- end
 			end
 		end
-	end
+	-- end
 end)
 
 function plymeta:LoadMoney()
@@ -52,12 +58,6 @@ timer.Create("fact_save",10,0,function()
 		end
 	end
 end)
-concommand.Add("fact_resetmoney",function(ply,c,a)
-	if IsValid(ply) then
-		ply:SetMoney(GetConVarNumber("fact_money_start"))
-		ply:SaveMoney()
-	end
-end)
 
 
 function plymeta:SaveFactory()
@@ -72,7 +72,7 @@ function plymeta:SaveFactory()
 		table.insert(savetbl.ents, v:Save(tbl))
 	end
 	local json = util.TableToJSON(savetbl)
-	file.CreateDir("factories/players/"..self:SteamID64())
+	file.CreateDir("factories/players/"..self:SteamID64()) --todo: attempt to concat nil value error fix
 	file.Write("factories/players/"..self:SteamID64().."/factory.txt", json) --todo: add mysql
 	
 	return json
@@ -86,7 +86,10 @@ function plymeta:LoadFactory()
 		for k,v in pairs(loadtbl.ents) do
 			local e = fact.PlaceObject(self,v.class,v.pos[1],v.pos[2],v.yaw,true)
 			if e then
-				e:Load(v)
+				local succ, err = pcall(e.Load, e, v)
+				if !succ then
+					ErrorNoHalt("ERROR! Failed to load "..(v.class or "[no class specified]")..". Error: "..(err or "(no error given)").."\n")
+				end
 				timer.Simple(1,function()
 					net.Start("fact_load")
 						net.WriteEntity(e)
@@ -102,10 +105,37 @@ end
 concommand.Add("fact_resetall",function(ply,c,a)
 	if IsValid(ply) then
 		ply:ResetFactory()
+		ply:ResetResearch()
+		ply:SetMoney(GetConVarNumber("fact_money_start"))
+		ply:SaveMoney()
 		file.Delete("factories/players/"..ply:SteamID64().."/factory.txt")
-		ply:ConCommand("retry")
+		-- ply:ConCommand("retry")
 	end
 end)
+
+function plymeta:SaveResearch()
+	local savetbl = {sel=self:GetResearchCategory(),res={}}
+	for k,v in pairs(research.List) do
+		savetbl.res[k] = self:GetResearch(k)
+	end
+	local json = util.TableToJSON(savetbl)
+	file.CreateDir("factories/players/"..self:SteamID64())
+	file.Write("factories/players/"..self:SteamID64().."/research.txt", json) --todo: add mysql
+	
+	return json
+end
+function plymeta:LoadResearch()
+	local json = file.Read("factories/players/"..self:SteamID64().."/research.txt","DATA")
+	local loadtbl = util.JSONToTable(json or "")
+	if istable(loadtbl) and #loadtbl.res != 0 then
+		for k,v in pairs(loadtbl.res) do
+			self:SetResearch(v,k)
+		end
+		self:SetResearchCategory(loadtbl.sel)
+	else
+		self:ResetResearch()
+	end
+end
 
 function plymeta:SaveInventory()
 	local savetbl = {}
@@ -123,19 +153,22 @@ function plymeta:LoadInventory()
 	local json = file.Read("factories/players/"..self:SteamID64().."/inv.txt","DATA")
 	local loadtbl = util.JSONToTable(json or "")
 	self.Inventory = {}
-	if istable(loadtbl) then
+	if istable(loadtbl) and #loadtbl != 0 then
 		for k,v in pairs(loadtbl) do
 			self:AddInvItem(v.class,v.quan)
 		end
+	else
+		self:ResetInventory()
 	end
 	self:SyncInventory()
 end
-concommand.Add("fact_resetinv",function(ply,c,a)
-	if IsValid(ply) then
-		ply:ResetInventory()
-		file.Delete("factories/players/"..ply:SteamID64().."/inv.txt")
-		-- ply:ConCommand("retry")
-	end
-end)
+-- concommand.Add("fact_resetinv",function(ply,c,a)
+	-- if IsValid(ply) and ply:IsAdmin() then
+		-- ServerLog("Resetting "..ply:Nick().."'s inventory...\n")
+		-- ply:ResetInventory()
+		-- file.Delete("factories/players/"..ply:SteamID64().."/inv.txt")
+		-- -- ply:ConCommand("retry")
+	-- end
+-- end)
 
 
