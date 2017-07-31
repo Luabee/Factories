@@ -30,10 +30,12 @@ function ENT:Initialize()
 	end
 	
 	timer.Simple(.5,function()
-		self:UpdateInOut()
-		for k,v in pairs(self:GetAdjacentEnts())do
-			if v.IsItemHolder then
-				v:UpdateInOut()
+		if IsValid(self) then
+			self:UpdateInOut()
+			for k,v in pairs(self:GetAdjacentEnts())do
+				if v.IsItemHolder then
+					v:UpdateInOut()
+				end
 			end
 		end
 	end)
@@ -81,6 +83,10 @@ function ENT:GetSelectionMat()
 end
 
 function ENT:Think()
+	
+	if CLIENT and IsValid(self:GetMaker()) then
+		if not LocalPlayer():HasPermission(self:GetMaker(),PERMISSION_VIEW) then return end
+	end
 	
 	local export = self:GetExport()
 	local exitem = items.List[export]

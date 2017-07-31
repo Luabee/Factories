@@ -11,6 +11,8 @@ net.Receive("fact_placeItem",function(len,ply)
 	local vec = grid.SnapTo(fac, Vector(x,y,fac.Root.z))
 	local gridX, gridY = vec:ToGrid(fac)
 	
+	if !ply:HasPermission(fac.Owner,PERMISSION_BUILD) then return end
+	
 	local item = ply:GetInvItem(class)
 	if item then
 		fact.PlaceObject(ply,item,gridX,gridY,rot)
@@ -23,7 +25,7 @@ net.Receive("fact_breakItem",function(len,ply)
 	local ent = net.ReadEntity()
 	
 	if IsValid(ent) then
-		-- if hook.Run("PlayerCanBreak", ply, target) != false then
+		if hook.Run("PlayerCanBreak", ply, ent) != false then
 			ply.LastBreak = ply.LastBreak or 0
 			if CurTime() >= ply.LastBreak + ent.BreakSpeed - .1 then --never trust the client.
 				ply.LastBreak = CurTime()
@@ -42,7 +44,7 @@ net.Receive("fact_breakItem",function(len,ply)
 				end
 				
 			end
-		-- end
+		end
 		
 	end
 	

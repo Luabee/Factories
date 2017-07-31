@@ -18,10 +18,12 @@ function ENT:Initialize()
 	self:SetupPreview()
 
 	timer.Simple(.5,function()
-		self:UpdateInOut()
-		for k,v in pairs(self:GetAdjacentEnts())do
-			if v.IsItemHolder then
-				v:UpdateInOut()
+		if IsValid(self) then
+			self:UpdateInOut()
+			for k,v in pairs(self:GetAdjacentEnts())do
+				if v.IsItemHolder then
+					v:UpdateInOut()
+				end
 			end
 		end
 	end)

@@ -16,10 +16,12 @@ function ENT:Initialize()
 	self:SetupPreview()
 
 	timer.Simple(.5,function()
-		self:UpdateInOut()
-		for k,v in pairs(self:GetAdjacentEnts())do
-			if v.IsItemHolder then
-				v:UpdateInOut()
+		if IsValid(self) then
+			self:UpdateInOut()
+			for k,v in pairs(self:GetAdjacentEnts())do
+				if v.IsItemHolder then
+					v:UpdateInOut()
+				end
 			end
 		end
 	end)
@@ -36,6 +38,10 @@ function ENT.SetupPreview(self)
 	
 end
 function ENT:DrawItems()
+	
+	if CLIENT and IsValid(self:GetMaker()) then
+		if not LocalPlayer():HasPermission(self:GetMaker(),PERMISSION_VIEW) then return end
+	end
 	
 	local oldpos = self:GetPos()
 	local oldang = self:GetAngles()
@@ -129,7 +135,7 @@ if SERVER then
 	net.Receive("fact_pallet",function(len,ply)
 		local imp = net.ReadEntity()
 		if not IsValid(imp) then return end
-		if imp:GetMaker() != ply then return end
+		-- if imp:GetMaker() != ply then return end
 		imp:SellAll()
 	end)
 else

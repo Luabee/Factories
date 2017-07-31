@@ -15,10 +15,12 @@ function ENT:Initialize()
 	self:SetupPreview()
 
 	timer.Simple(.5,function()
-		self:UpdateInOut()
-		for k,v in pairs(self:GetAdjacentEnts())do
-			if v.IsItemHolder then
-				v:UpdateInOut()
+		if IsValid(self) then
+			self:UpdateInOut()
+			for k,v in pairs(self:GetAdjacentEnts())do
+				if v.IsItemHolder then
+					v:UpdateInOut()
+				end
 			end
 		end
 	end)
@@ -75,6 +77,11 @@ function ENT:GetSelectionMat()
 end
 
 function ENT:Think()
+
+	if CLIENT and IsValid(self:GetMaker()) then
+		if not LocalPlayer():HasPermission(self:GetMaker(),PERMISSION_VIEW) then return end
+	end
+	
 	local import = self:GetImport()
 	if import and import != "" and #self.Holding == 0 then
 		self.Holding[1] = items.Create(import)

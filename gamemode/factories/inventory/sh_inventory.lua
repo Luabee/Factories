@@ -59,8 +59,8 @@ function plymeta:AddInvItem(item, quan) --accepts a classname or an item object.
 		
 		if CLIENT and IsValid(g_SpawnMenu) then
 			local pnl = g_SpawnMenu.inv:Add("InvItem")
-			pnl:Index()
 			pnl:SetItem(item)
+			pnl:Index()
 		end
 	end
 	
