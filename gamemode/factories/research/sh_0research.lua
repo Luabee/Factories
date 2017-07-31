@@ -5,15 +5,16 @@ research.sr = " "..research.r
 research.List = research.List or {}
 
 research.LevelMats = {
-	Material("factories/tech/tech_red"),
-	Material("factories/tech/tech_green"),
-	Material("factories/tech/tech_blue"),
-	Material("factories/tech/tech_pink"),
+	(Material("factories/tech/tech_red")),
+	(Material("factories/tech/tech_green")),
+	(Material("factories/tech/tech_blue")),
+	(Material("factories/tech/tech_pink")),
 }
 research.LevelColors = {
 	Color(120,80,80,200),
 	Color(80,120,80,200),
 	Color(80,80,120,200),
+	Color(255,0,255,200),
 }
 research.LevelModelMats = {
 	"phoenix_storms/wire/pcb_red",
@@ -87,10 +88,10 @@ end
 
 function plymeta:ResetResearch()
 	for k,v in pairs(research.List)do
-		if k == "production" or k == "logistics" then 
-			self:SetResearch(v.levels[1],k)
-		else
+		-- if k == "production" or k == "logistics" then 
+			-- self:SetResearch(v.levels[1],k)
+		-- else
 			self:SetResearch(0,k)
-		end
+		-- end
 	end
 end

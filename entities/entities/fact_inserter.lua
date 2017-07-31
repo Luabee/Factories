@@ -35,19 +35,19 @@ function ENT:Initialize()
 				if SERVER then 
 					timer.Adjust("insertersync"..eid,10,0,function()
 						if IsValid(self) then
-							net.Start("fact_insertersync")
-								net.WriteEntity(self)
-								net.WriteFloat(self:GetAngles().y)
-								net.WriteBool(self:GetPickingUp())
-								net.WriteBool(self:GetDroppingOff())
-								net.WriteBool(self:GetDir())
-								if self.Holding[1] then
-									net.WriteBool(true)
-									net.WriteString(self.Holding[1].ClassName)
-								else
-									net.WriteBool(false)
-								end
-							net.Broadcast()
+							-- net.Start("fact_insertersync")
+								-- net.WriteEntity(self)
+								-- net.WriteFloat(self:GetAngles().y)
+								-- net.WriteBool(self:GetPickingUp())
+								-- net.WriteBool(self:GetDroppingOff())
+								-- net.WriteBool(self:GetDir())
+								-- if self.Holding[1] then
+									-- net.WriteBool(true)
+									-- net.WriteString(self.Holding[1].ClassName)
+								-- else
+									-- net.WriteBool(false)
+								-- end
+							-- net.Broadcast()
 						else
 							timer.Remove("insertersync"..eid)
 						end
@@ -68,10 +68,12 @@ function ENT:Initialize()
 	self:SetupPreview()
 
 	timer.Simple(.5,function()
-		self:UpdateInOut()
-		for k,v in pairs(self:GetAdjacentEnts())do
-			if v.IsItemHolder then
-				v:UpdateInOut()
+		if IsValid(self) then
+			self:UpdateInOut()
+			for k,v in pairs(self:GetAdjacentEnts())do
+				if v.IsItemHolder then
+					v:UpdateInOut()
+				end
 			end
 		end
 	end)
@@ -92,7 +94,7 @@ function ENT.SetupPreview(self)
 		self:SetModelScale(.3)
 		self.magnet = ClientsideModel("models/props_wasteland/cranemagnet01a.mdl")
 		self.magnet:SetModelScale(.15)
-		self.magnet:SetParent(self)
+		-- self.magnet:SetParent(self)
 		local vec = Vector(-25,0,20)
 		local ang = self:GetRenderAngles() or self:GetAngles()
 		vec:Rotate(ang)
@@ -104,7 +106,6 @@ function ENT.SetupPreview(self)
 end
 function ENT.PostDrawPreview(self)
 	local oldpos = self:GetPos()
-	local vec = Vector(-25,0,20)
 	local ang = self:GetRenderAngles() or self:GetAngles()
 	
 	if self.IsInserter then
@@ -126,6 +127,7 @@ function ENT.PostDrawPreview(self)
 		end
 	end
 	
+	local vec = Vector(-25,0,20)
 	vec:Rotate(ang)
 	self.magnet:SetModel("models/props_wasteland/cranemagnet01a.mdl")
 	self.magnet:SetMaterial(research.LevelModelMats[self:GetLevel()])
@@ -170,7 +172,30 @@ end
 function ENT:GetDir() return self.Dir end
 
 function ENT:Think()
-	self.BaseClass.Think(self)
+	
+	if CLIENT and IsValid(self:GetMaker()) then
+		if not LocalPlayer():HasPermission(self:GetMaker(),PERMISSION_VIEW) then return end
+	end
+	
+	if self:GetPickingUp() then
+		
+		local item, input, track = self:IsThereInput()
+		if item then
+			if self:CanReceive(item,input,track) and input:CanGive(item,self,track) then
+				self:PickUp(item, input, track)
+			end
+		end
+		
+	elseif self:GetDroppingOff() then
+		
+		local item, output, track = self:IsThereOutput()
+		if item then
+			if output:CanReceive(item,self,track) and self:CanGive(item,output,track) then
+				self:DropOff(item, output, track)
+			end
+		end
+		
+	end
 	
 	if IsValid(self.Outputs[1]) then
 		self.Requesting = self.Outputs[1].Requesting
@@ -210,19 +235,23 @@ end
 function ENT:Save(tbl)
 	tbl = self.BaseClass.Save(self,tbl)
 	
-	tbl.dir = self:GetDir()
-	tbl.pickup = self:GetPickingUp()
-	tbl.dropoff = self:GetDroppingOff()
+	-- tbl.dir = self:GetDir()
+	-- tbl.pickup = self:GetPickingUp()
+	-- tbl.dropoff = self:GetDroppingOff()
 	
 	return tbl
 end
 function ENT:Load(tbl)
 	self.BaseClass.Load(self,tbl)
 	
-	self:SetDir(tbl.dir)
-	self:SetPickingUp(tbl.pickup)
-	self:SetDroppingOff(tbl.dropoff)
-	self:SetNW2Float("NextPickup",CurTime())
+	-- self:SetDir(tbl.dir)
+	-- self:SetPickingUp(tbl.pickup)
+	-- self:SetDroppingOff(tbl.dropoff)
+	self:SetPickingUp(false)
+	self:SetDroppingOff(false)
+	self:SetDir(false)
+	self:SetAngles(Angle(0,self.Yaw,0))
+	-- self:SetNW2Float("NextPickup",CurTime())
 end
 
 function ENT:SetupIO(adjacent)

@@ -1,9 +1,15 @@
 
-
-timer.Create("fact_sync",600,0,function()
+function fact.Sync()
+	if LocalPlayer():GetFactory().Owner != LocalPlayer() then return end
+	
 	LocalPlayer().FactorySync = true
 	net.Start("fact_syncfactory")
 	net.SendToServer()
+end
+timer.Create("fact_sync",600,0,fact.Sync)
+
+net.Receive("fact_syncfactory_tell",function()
+	LocalPlayer().FactorySync = net.ReadBool()
 end)
 net.Receive("fact_syncfactory",function()
 	local root = LocalPlayer():GetFactory().Root
@@ -27,10 +33,15 @@ hook.Add("HUDPaint","fact_sync",function()
 	end
 end)
 
+local nofocus = false
 hook.Add("RenderScreenspaceEffects","fact_sync",function()
 	if fact.Loading or LocalPlayer().FactorySync then
-		
 		DrawMotionBlur(0, 1, 5)
-		
+	end
+	if nofocus and system.HasFocus() then
+		nofocus = false
+		fact.Sync()
+	elseif not system.HasFocus() then
+		nofocus = true
 	end
 end)

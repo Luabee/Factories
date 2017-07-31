@@ -3,8 +3,8 @@
 research.AddCategory("production",{
 	color = Color(161,48,52),
 	levels = { --how much research is needed to acquire each level.
-		1,
-		301,
+		0,
+		300,
 		10000,
 	},
 	benefits = { --the benefits unlocked at each level.
@@ -30,8 +30,8 @@ research.AddCategory("production",{
 research.AddCategory("logistics",{
 	color = Color(253,253,129),
 	levels = { --how much research is needed to acquire each level.
-		1,
-		301,
+		0,
+		300,
 		10000,
 		20000
 	},
@@ -42,13 +42,13 @@ research.AddCategory("logistics",{
 			"+1 Pallet Layer",
 		}, 
 		{ --Level 2
-			"Filter Conveyors",
-			"Filter Inserters",
+			"Fast Conveyors",
+			"Fast Inserters",
 			"+1 Pallet Layer",
 		},
 		{ --Level 3
-			"Fast Conveyors",
-			"Fast Inserters",
+			"Filter Conveyors",
+			"Filter Inserters",
 			"+1 Pallet Layer",
 		},
 		{ --Level 4
@@ -62,15 +62,15 @@ research.AddCategory("personal",{
 	color = Color(67,166,67),
 	levels = { --how much research is needed to acquire each level.
 		300,
-		2500
+		-- 2500
 	},
 	benefits = { --the benefits unlocked at each level.
 		{ --Level 1
-			
+			"Pointshop Packs",
 		}, 
-		{ --Level 2
-			
-		},
+		-- { --Level 2
+			-- ""
+		-- },
 	},
 	index = 3, --how low on the list to put this category
 })

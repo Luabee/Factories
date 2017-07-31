@@ -66,18 +66,20 @@ local bgcol_locked = Color(120,80,80,200)
 local hovercol = Color(240,240,240)
 function PANEL:Paint(w,h)
 
-	if self:GetItem() and self:GetItem().FinishedProduct then
-		surface.SetDrawColor(bgcol_finishedProduct)
-	else
-		surface.SetDrawColor(bgcol)
-	end
-	surface.DrawRect(0,0,w,h)
+	-- if self:GetItem() and self:GetItem().FinishedProduct then
+		-- surface.SetDrawColor(bgcol_finishedProduct)
+	-- else
+		-- surface.SetDrawColor(bgcol)
+	-- end
+	-- surface.DrawRect(0,0,w,h)
 	
 	-- surface.SetDrawColor(color_white)
 	-- surface.SetMaterial(research.LevelMats[self:GetItem().Level])
 	-- surface.DrawTexturedRectUV(0,0,w,h,0,0,w/600,h/600)
-	surface.SetDrawColor(research.LevelColors[self:GetItem().Level])
-	surface.DrawRect(0,0,w,h)
+	if self:GetItem() and self:GetItem().Level then
+		surface.SetDrawColor(research.LevelColors[self:GetItem().Level])
+		surface.DrawRect(0,0,w,h)
+	end
 	
 	-- surface.SetDrawColor(Color(0,0,0,240))
 	-- surface.DrawRect(0,0,w,h)

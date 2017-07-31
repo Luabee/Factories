@@ -19,11 +19,12 @@ hook.Add("PostDrawTranslucentRenderables","fact_drawresearch",function(sky)
 end)
 
 function research.Open()
-	if IsValid(g_PopUp) then g_PopUp:Close() return end
+	if IsValid(g_PopUp) then g_PopUp:Close() if g_PopUp.research then return end end
 	if IsValid(g_SpawnMenu) and g_SpawnMenu:IsVisible() then g_SpawnMenu:Close() end
 	
 	local frame = vgui.Create("DFrame")
 	g_PopUp = frame
+	frame.research = true
 	frame:SetSize(ScrW()*.65, ScrH()*.75)
 	frame:Center()
 	frame:SetTitle("Research")
@@ -82,7 +83,7 @@ function research.Open()
 		title:SizeToContents()
 		title:SetSize(title:GetWide()+2,title:GetTall()+2)
 		
-		select = vgui.Create("DButton",bg)
+		local select = vgui.Create("DButton",bg)
 		select:SetPos(20+title:GetWide(), 5)
 		select:SetTall(26)
 		select:SetText(LocalPlayer():GetResearchCategory() == name and "Selected" or "Select")
@@ -216,7 +217,7 @@ function research.Open()
 			desc:SetText("")
 			desc:SetTextColor(color_white)
 			desc:SetExpensiveShadow(1,color_black)
-			desc:SetFont("factRoboto20")
+			desc:SetFont("factRoboto22")
 			for k,v in ipairs(benefits) do
 				desc:SetText(desc:GetText().."• "..v.."\n")
 			end

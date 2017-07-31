@@ -2,7 +2,7 @@ local plymeta = FindMetaTable("Player")
 util.AddNetworkString("fact_load")
 
 local function report(err)
-	ErrorNoHalt("[ERROR! Failed to load player's Factory/Money/Inventory/Research!]: "..err)
+	ErrorNoHalt("[ERROR! Failed to load player's data!]: "..err)
 	debug.Trace()
 	-- ErrorNoHalt(debug.traceback( nil, "[Failed to load player's Factory/Money/Inventory/Research!]"..err, 1 ))
 end
@@ -18,6 +18,15 @@ hook.Add("PlayerInitialSpawn","fact_loadEverything",function(ply)
 	end)
 end)
 
+hook.Add("ShutDown","fact_saveEverything",function()
+	for k,ply in pairs(player.GetAll())do
+		ply:SaveMoney()
+		ply:SaveInventory()
+		ply:SaveFactory()
+		ply:SaveResearch()
+	end
+end)
+
 hook.Add("PlayerDisconnected","fact_saveEverything",function(ply)
 	-- if ply:IsPlayer() then
 		--save all shit.
@@ -26,31 +35,20 @@ hook.Add("PlayerDisconnected","fact_saveEverything",function(ply)
 		ply:SaveFactory()
 		ply:SaveResearch()
 		
-		--remove all ents.
-		for k,v in pairs(ply:GetFactory().Ents)do
-			if IsValid(v) then
-			-- if v.GetMaker and v:GetMaker() == ply or v.Owner == ply then
-				v:Remove()
-			-- end
-			end
-		end
-		for k,v in pairs(ply:GetFactory().Walls)do
-			if IsValid(v) then
-			-- if v.GetMaker and v:GetMaker() == ply or v.Owner == ply then
-				v:Remove()
-			-- end
-			end
-		end
+		ply:RemoveFactory()
 	-- end
 end)
 
 function plymeta:LoadMoney()
-	self:SetMoney(self:GetPData("fact_money", GetConVarNumber("fact_money_start")),true)
+	local amt = tonumber(file.Read("factories/players/"..(self:SteamID64() or 0).."/money.txt","DATA"))
+	
+	self:SetMoney(amt or GetConVarNumber("fact_money_start"))
 end
 function plymeta:SaveMoney()
-	self:SetPData("fact_money", self:GetMoney())
+	file.CreateDir("factories/players/"..(self:SteamID64() or 0))
+	file.Write("factories/players/"..(self:SteamID64() or 0).."/money.txt", self:GetMoney()) --todo: add mysql
 end
-timer.Create("fact_save",10,0,function()
+timer.Create("fact_save_money",10,0,function()
 	for k,v in pairs(player.GetAll()) do
 		if IsValid(v) then
 			v:SaveMoney()
@@ -62,6 +60,8 @@ end)
 
 function plymeta:SaveFactory()
 	local fac = self:GetFactory()
+	if IsValid(self:GetVisiting()) then return end
+	
 	local savetbl = {
 		ents = {},
 		pos = {self:GetPos():ToGrid(fac)},
@@ -72,14 +72,15 @@ function plymeta:SaveFactory()
 		table.insert(savetbl.ents, v:Save(tbl))
 	end
 	local json = util.TableToJSON(savetbl)
-	file.CreateDir("factories/players/"..self:SteamID64()) --todo: attempt to concat nil value error fix
-	file.Write("factories/players/"..self:SteamID64().."/factory.txt", json) --todo: add mysql
+	file.CreateDir("factories/players/"..(self:SteamID64() or 0))
+	file.Write("factories/players/"..(self:SteamID64() or 0).."/factory.txt", json) --todo: add mysql
 	
 	return json
 end
 function plymeta:LoadFactory()
-	local json = file.Read("factories/players/"..self:SteamID64().."/factory.txt","DATA")
+	local json = file.Read("factories/players/"..(self:SteamID64() or 0).."/factory.txt","DATA")
 	local loadtbl = util.JSONToTable(json or "")
+	local fac = fact.Create(self)
 	if istable(loadtbl) and #loadtbl.ents != 0 then
 		
 		self:SetPos(Vector(0,0,5) + grid.ToVector(self:GetFactory(), unpack(loadtbl.pos)))
@@ -94,13 +95,14 @@ function plymeta:LoadFactory()
 					net.Start("fact_load")
 						net.WriteEntity(e)
 						net.WriteTable(v)
-					net.Send(self)
+					net.Send(fact.GetPlayers(self:GetFactory()))
 				end)
 			end
 		end
 	else
 		self:ResetFactory()
 	end
+	return fac
 end
 concommand.Add("fact_resetall",function(ply,c,a)
 	if IsValid(ply) then
@@ -108,7 +110,7 @@ concommand.Add("fact_resetall",function(ply,c,a)
 		ply:ResetResearch()
 		ply:SetMoney(GetConVarNumber("fact_money_start"))
 		ply:SaveMoney()
-		file.Delete("factories/players/"..ply:SteamID64().."/factory.txt")
+		file.Delete("factories/players/"..(self:SteamID64() or 0).."/factory.txt")
 		-- ply:ConCommand("retry")
 	end
 end)
@@ -119,15 +121,15 @@ function plymeta:SaveResearch()
 		savetbl.res[k] = self:GetResearch(k)
 	end
 	local json = util.TableToJSON(savetbl)
-	file.CreateDir("factories/players/"..self:SteamID64())
-	file.Write("factories/players/"..self:SteamID64().."/research.txt", json) --todo: add mysql
+	file.CreateDir("factories/players/"..(self:SteamID64() or 0))
+	file.Write("factories/players/"..(self:SteamID64() or 0).."/research.txt", json) --todo: add mysql
 	
 	return json
 end
 function plymeta:LoadResearch()
-	local json = file.Read("factories/players/"..self:SteamID64().."/research.txt","DATA")
+	local json = file.Read("factories/players/"..(self:SteamID64() or 0).."/research.txt","DATA")
 	local loadtbl = util.JSONToTable(json or "")
-	if istable(loadtbl) and #loadtbl.res != 0 then
+	if istable(loadtbl) and table.Count(loadtbl.res) != 0 then
 		for k,v in pairs(loadtbl.res) do
 			self:SetResearch(v,k)
 		end
@@ -144,13 +146,13 @@ function plymeta:SaveInventory()
 		table.insert(savetbl, tbl)
 	end
 	local json = util.TableToJSON(savetbl)
-	file.CreateDir("factories/players/"..self:SteamID64())
-	file.Write("factories/players/"..self:SteamID64().."/inv.txt", json) --todo: add mysql
+	file.CreateDir("factories/players/"..(self:SteamID64() or 0))
+	file.Write("factories/players/"..(self:SteamID64() or 0).."/inv.txt", json) --todo: add mysql
 	
 	return json
 end
 function plymeta:LoadInventory()
-	local json = file.Read("factories/players/"..self:SteamID64().."/inv.txt","DATA")
+	local json = file.Read("factories/players/"..(self:SteamID64() or 0).."/inv.txt","DATA")
 	local loadtbl = util.JSONToTable(json or "")
 	self.Inventory = {}
 	if istable(loadtbl) and #loadtbl != 0 then
@@ -166,7 +168,7 @@ end
 	-- if IsValid(ply) and ply:IsAdmin() then
 		-- ServerLog("Resetting "..ply:Nick().."'s inventory...\n")
 		-- ply:ResetInventory()
-		-- file.Delete("factories/players/"..ply:SteamID64().."/inv.txt")
+		-- file.Delete("factories/players/"..(self:SteamID64() or 0).."/inv.txt")
 		-- -- ply:ConCommand("retry")
 	-- end
 -- end)

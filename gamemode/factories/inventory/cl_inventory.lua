@@ -28,7 +28,7 @@ function inv.GetPanel(class)
 	if istable(class) then class = class.ClassName end
 	local pnl
 	for k,v in pairs(inv.ItemPanels)do
-		if IsValid(v) and v:GetItem().ClassName == class and not v:GetForSale() then
+		if IsValid(v) and v:GetItem().ClassName == class then
 			pnl = v
 			break
 		end
@@ -40,9 +40,12 @@ net.Receive("fact_invsync",function()
 	local ply = net.ReadEntity()
 	local size = net.ReadFloat()
 	for k,v in pairs(ply:GetInventory()) do
-		ply:RemoveInvItem(v)
+		ply:RemoveInvItem(k)
 	end
 	ply.Inventory = {}
+	if IsValid(g_SpawnMenu) then	
+		g_SpawnMenu:Update()
+	end
 	
 	for i=1, size do
 		ply:AddInvItem(net.ReadString(), net.ReadFloat())
@@ -52,7 +55,7 @@ net.Receive("fact_invsync",function()
 end)
 
 function CreateInvMenu()
-	if IsValid(g_PopUp) then g_PopUp:Close() return end
+	if IsValid(g_PopUp) then g_PopUp:Close() end
 	if IsValid(g_SpawnMenu) then 
 		g_SpawnMenu:SetVisible(true) 
 		g_SpawnMenu.shop:Populate() 
@@ -127,6 +130,7 @@ function CreateInvMenu()
 	
 	function frame:Update()
 		local inventory = LocalPlayer():GetInventory()
+		invpnl:Clear()
 		if table.Count(inventory) == 0 then
 			-- local empty = vgui.Create("DLabel",invScroll)
 			-- empty:Dock(FILL)
@@ -249,7 +253,8 @@ function CreateInvMenu()
 	
 	local preDescScr = vgui.Create("DScrollPanel",selectedSide)
 	preDescScr:Dock(TOP)
-	preDescScr:SetTall(102)
+	preDescScr:SetTall(73)
+	preDescScr:GetCanvas():DockPadding(0,-5,5,5)
 	frame.preDescScr = preDescScr
 	
 	local preDescLbl = vgui.Create("DLabel",preDescScr)
@@ -287,7 +292,7 @@ function CreateInvMenu()
 			preDescLbl:SetText(" ")
 			prePrice:SetText(" ")
 			buySell:SetVisible(false)
-			preDescScr:SetTall(132)
+			preDescScr:SetTall(102)
 			return
 		end
 		
@@ -302,11 +307,11 @@ function CreateInvMenu()
 			prePrice:SetText("$"..string.Comma(i.BasePrice))
 		end
 		if store.Tab:IsActive() then
-			preDescScr:SetTall(102)
+			preDescScr:SetTall(72)
 			buySell:SetText("Buy")
 			buySell:SetVisible(true)
 		else
-			preDescScr:SetTall(132)
+			preDescScr:SetTall(102)
 			buySell:SetVisible(false)
 			-- buySell:SetText("Sell")
 		end

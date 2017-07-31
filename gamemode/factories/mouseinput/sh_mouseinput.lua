@@ -1,14 +1,14 @@
 mousein = mousein or {}
 
 function GM:PlayerCanBreak(ply,target)
-	if IsValid(target) and target.IsFactoryPart and target:GetMaker() == ply then
-		-- if target.IsFloor then
-			-- local fac = ply:GetFactory()
-			-- local x,y = target:GetPos():ToGrid(fac)
-			-- local w,h = target:GetSize()
-			-- if !grid.CanPlace(fac, x, y, w, h) then
-				-- return false
-			-- end
+	if IsValid(target) and target.IsFactoryPart and ply:HasPermission(target:GetMaker(),PERMISSION_ALL) then
+		if target.IsFloor then
+			local fac = ply:GetFactory()
+			local x,y = target:GetGridPos()
+			local w,h = target:GetSize()
+			if !grid.CanPlace(fac, x, y, w, h) then
+				return false
+			end
 			-- local count = 0
 			-- for k,v in pairs(ents.FindByClass("*floor*"))do
 				-- if v:GetMaker() == ply then
@@ -17,7 +17,7 @@ function GM:PlayerCanBreak(ply,target)
 				-- end
 			-- end
 			-- if count == 1 then return false end
-		-- end
+		end
 		return true
 	end
 	return false

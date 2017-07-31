@@ -55,7 +55,9 @@ end
 
 function PNL:SetModel(m)
 	if not m then
-		self.Entity:Remove()
+		if IsValid(self.Entity) then
+			self.Entity:Remove()
+		end
 		return
 	end
 	self.BaseClass.SetModel(self,m)
@@ -99,13 +101,6 @@ end
 
 
 function PNL:LayoutEntity(e)
-	-- Point camera toward the look pos
-	local lookAng = ( self.vLookatPos-self.vCamPos ):Angle()
-
-	-- Rotate the look angles based on incrementing yaw value
-	lookAng:RotateAroundAxis( Vector( 0, 0, 1 ), math.sin((RealTime() + self.rand)) * 30 )
-
-	-- Set camera look angles
 	e:SetAngles(Angle(0, math.sin((RealTime() + self.rand)) * 30 ,0))
 end
 

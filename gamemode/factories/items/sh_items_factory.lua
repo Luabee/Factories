@@ -16,19 +16,23 @@ hook.Add("Initialize","fact_items_factory",function()
 	ITEM.Model = "models/props_wasteland/buoy01.mdl"
 	items.Register("fact_inserter", ITEM)
 	
-	ITEM.Level = 2
-	ITEM.BasePrice = 105
-	ITEM.Name = "Filter Inserter"
-	items.Register("fact_inserter2",ITEM)
-	ITEM.Level = 3
-	ITEM.BasePrice = 200
 	ITEM.Name = "Fast Inserter"
+	ITEM.Level = 2
+	ITEM.BasePrice = 600
+	ITEM.EntClass = "fact_inserter_fast"
+	items.Register("fact_inserter2",ITEM)
+	
+	ITEM.Name = "Filter Inserter"
+	ITEM.Desc = ITEM.Desc .. "\n\nFilter Inserters only pick up one kind of item. Click the filter inserter to select a product to filter for."
+	ITEM.Level = 3
+	ITEM.EntClass = "fact_inserter_filter"
+	ITEM.BasePrice = 4000
 	items.Register("fact_inserter3",ITEM)
 
 	local ITEM = {}
 	ITEM.Name = "Conveyor"
 	ITEM.Desc = [[Conveyors move items across your factory.
-
+	
 	They have two separate sides which pull on different tracks.]]
 	ITEM.BasePrice = 15
 	ITEM.Model = "models/hunter/plates/plate1x1.mdl"
@@ -39,13 +43,17 @@ hook.Add("Initialize","fact_items_factory",function()
 	ITEM.FactoryPart = true
 	items.Register("fact_conveyor", ITEM)
 	
-	ITEM.Level = 2
-	ITEM.BasePrice = 25
-	ITEM.Name = "Filter Conveyor"
-	items.Register("fact_conveyor2",ITEM)
-	ITEM.Level = 3
-	ITEM.BasePrice = 50
 	ITEM.Name = "Fast Conveyor"
+	ITEM.Level = 2
+	ITEM.BasePrice = 400
+	ITEM.EntClass = "fact_conveyor_fast"
+	items.Register("fact_conveyor2",ITEM)
+	
+	ITEM.Name = "Filter Conveyor"
+	ITEM.Desc = ITEM.Desc .. "\n\nFilter Conveyors only allow one item type to go through. Click the filter conveyor to select a product to filter for."
+	ITEM.Level = 3
+	ITEM.BasePrice = 2500
+	ITEM.EntClass = "fact_conveyor_filter"
 	items.Register("fact_conveyor3",ITEM)
 
 	local ITEM = {}
@@ -62,12 +70,12 @@ hook.Add("Initialize","fact_items_factory",function()
 	items.Register("fact_assembler", ITEM)
 	
 	ITEM.Level = 2
-	ITEM.BasePrice = 550
+	ITEM.BasePrice = 1500
 	ITEM.Name = "Advanced Assembler"
 	items.Register("fact_assembler2",ITEM)
 	ITEM.Level = 3
 	ITEM.Name = "Ultra Assembler"
-	ITEM.BasePrice = 1300
+	ITEM.BasePrice = 10000
 	items.Register("fact_assembler3",ITEM)
 
 	local ITEM = {}
@@ -84,11 +92,11 @@ hook.Add("Initialize","fact_items_factory",function()
 	items.Register("fact_furnace", ITEM)
 	
 	ITEM.Level = 2
-	ITEM.BasePrice = 450
+	ITEM.BasePrice = 2000
 	ITEM.Name = "Advanced Furnace"
 	items.Register("fact_furnace2",ITEM)
 	ITEM.Level = 3
-	ITEM.BasePrice = 1000
+	ITEM.BasePrice = 10000
 	ITEM.Name = "Ultra Furnace"
 	items.Register("fact_furnace3",ITEM)
 
@@ -106,12 +114,12 @@ hook.Add("Initialize","fact_items_factory",function()
 	items.Register("fact_miner", ITEM)
 	
 	ITEM.Level = 2
-	ITEM.BasePrice = 2500
+	ITEM.BasePrice = 5000
 	ITEM.Name = "Advanced Miner"
 	items.Register("fact_miner2",ITEM)
 	ITEM.Level = 3
 	ITEM.Name = "Ultra Miner"
-	ITEM.BasePrice = 4000
+	ITEM.BasePrice = 20000
 	items.Register("fact_miner3",ITEM)
 
 	-- local ITEM = {}
@@ -128,7 +136,7 @@ hook.Add("Initialize","fact_items_factory",function()
 	local ITEM = {}
 	ITEM.Name = "Factory Floor"
 	ITEM.Desc = [[Add on to your factory by building more floor space.]]
-	ITEM.BasePrice = 1000
+	ITEM.BasePrice = 2000
 	ITEM.EntClass = "fact_floor"
 	ITEM.ForSale = true
 	ITEM.FactoryPart = true

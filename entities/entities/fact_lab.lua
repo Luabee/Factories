@@ -17,10 +17,12 @@ function ENT:Initialize()
 	self:SetupPreview()
 	
 	timer.Simple(.5,function()
-		self:UpdateInOut()
-		for k,v in pairs(self:GetAdjacentEnts())do
-			if v.IsItemHolder then
-				v:UpdateInOut()
+		if IsValid(self) then
+			self:UpdateInOut()
+			for k,v in pairs(self:GetAdjacentEnts())do
+				if v.IsItemHolder then
+					v:UpdateInOut()
+				end
 			end
 		end
 	end)
@@ -128,7 +130,7 @@ function ENT:SellAll()
 			end
 		end
 		if b then 
-			notification.AddLegacy("Level "..b.." research packs can't be used to research level "..maker:GetResearchLevel()+1 .." tech.",NOTIFY_ERROR,8)
+			notification.AddLegacy("Level "..(b+1).." research packs can't be used to research level "..maker:GetResearchLevel()+1 .." tech.",NOTIFY_ERROR,8)
 		end
 		self.Holding = {}
 		
@@ -146,13 +148,6 @@ end
 
 
 if SERVER then
-	util.AddNetworkString("fact_pallet")
-	net.Receive("fact_pallet",function(len,ply)
-		local imp = net.ReadEntity()
-		if not IsValid(imp) then return end
-		if imp:GetMaker() != ply then return end
-		imp:SellAll()
-	end)
 else
 	function ENT:DoClick()
 		net.Start("fact_pallet")

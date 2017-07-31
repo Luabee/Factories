@@ -7,6 +7,7 @@ BEND_RIGHT = 2
 AccessorFunc(ENT,"Bend","Bend",FORCE_NUMBER)
 
 conveyors = conveyors or {}
+conveyors.normal = conveyors.normal or {}
 
 ENT.Base = "base_fact_itemholder"
 ENT.BreakSpeed = .2
@@ -38,7 +39,7 @@ function ENT:Initialize()
 		end
 	end)
 	
-	table.insert(conveyors,self)
+	table.insert(conveyors.normal,self)
 	
 	if CLIENT then
 		self.items = ClientsideModel("models/props_junk/cardboard_box004a.mdl")
@@ -52,7 +53,7 @@ function ENT:OnRemove()
 	if CLIENT then
 		self.items:Remove()
 	end
-	table.RemoveByValue(conveyors,self)
+	table.RemoveByValue(conveyors.normal,self)
 	self:SellAll()
 end
 
@@ -91,7 +92,7 @@ function ENT:Save(tbl)
 end
 function ENT:Load(tbl)
 	self.Yaw = tbl.yaw
-	self:SetLevel(tbl.Level or 1)
+	self:SetLevel(tbl.level or 1)
 	
 	for k,v in pairs(tbl.Holding) do
 		self.Holding[k] = items.Create(v.class,v.quan)
@@ -153,11 +154,10 @@ function ENT:SetupIO(adj)
 	
 end
 
-function ENT:Think()
-
-end
-
 function ENT:MoveTracks()
+	if CLIENT and IsValid(self:GetMaker()) then
+		if not LocalPlayer():HasPermission(self:GetMaker(),PERMISSION_VIEW) then return end
+	end
 	for t=1, 2 do
 		for k = #self.Tracks[t], 1, -1 do
 		local item = self.Tracks[t][k]
@@ -280,26 +280,33 @@ hook.Add("PlayerTick","fact_conveyormove",function(ply,mv)
 end)
 
 local s = ENT.Speed
-hook.Add("Think","resetconvey",function() --TODO: Make this nicer.
-	if not timer.Exists("fact_conveyors") then
-		timer.Create("fact_conveyors",s / (smoothness/5)/3, 0, function()
-			for k,v in pairs(conveyors)do
-				if IsValid(v) then
-					v:MoveTracks()
-				end
+local next = CurTime()
+local crawl = 0
+local cs = (1/ENT.Speed)
+hook.Add("Think","fact_convey",function()
+	local ct = CurTime()
+	if ct > next then
+		next = ct + s / (smoothness/5)/3
+		for k,v in pairs(conveyors.normal)do
+			if IsValid(v) then
+				v:MoveTracks()
 			end
-		end)
+		end
 	end
+	crawl = ( crawl + FrameTime()* s * 25 ) % 47
 end)
 
 if CLIENT then
-	local crawl = 0
-	local s = (1/ENT.Speed)
-	hook.Add("Think","fact_crawl",function()
-		crawl = ( crawl + FrameTime()* s * 25 ) % 47
-	end)
 	
 	function ENT:Draw()
+		
+		if CLIENT and IsValid(self:GetMaker()) then
+			if not LocalPlayer():HasPermission(self:GetMaker(),PERMISSION_VIEW) then
+				self:DrawModel()
+				self:PostDrawPreview()
+				return
+			end
+		end
 		
 		local oldpos = self:GetPos()
 		local oldang = self:GetAngles()

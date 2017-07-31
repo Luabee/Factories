@@ -64,26 +64,27 @@ function grid.AddItem(fac,x,y,w,h,ent)
 	if SERVER then
 		timer.Simple(.1,function()
 			net.Start("fact_additem")
+				net.WriteEntity(fac.Owner)
 				net.WriteEntity(ent)
 				net.WriteUInt(x,16)
 				net.WriteUInt(y,16)
 				net.WriteUInt(w,3)
 				net.WriteUInt(h,3)
-			net.Send(fac.Owner)
+			net.Broadcast()
 		end)
 	end
 end
 function grid.AddFloor(fac,x,y,w,h,ent)
-	if not fac.Floors[x] then error("Tried to place a floor outside the bounds.") end
-	
-	if ent.SetGridPos then
-		ent:SetGridPos(x,y)
-	end
 	
 	for checkX = x, x-w+1, -1 do
 		for checkY = y, y-h+1, -1 do
+			if not fac.Floors[checkX] then error("Tried to place a floor outside the bounds.") end
 			fac.Floors[checkX][checkY] = ent
 		end
+	end
+	
+	if ent.SetGridPos then
+		ent:SetGridPos(x,y)
 	end
 	
 	fact.RebuildWalls(fac)
@@ -91,33 +92,36 @@ function grid.AddFloor(fac,x,y,w,h,ent)
 	if SERVER then
 		timer.Simple(.1,function()
 			net.Start("fact_addfloor")
+				net.WriteEntity(fac.Owner)
 				net.WriteEntity(ent)
 				net.WriteUInt(x,16)
 				net.WriteUInt(y,16)
 				net.WriteUInt(w,3)
 				net.WriteUInt(h,3)
-			net.Send(fac.Owner)
+			net.Broadcast()
 		end)
 	end
 end
 if CLIENT then
 	net.Receive("fact_addfloor",function()
-		local ent = net.ReadEntity(ent)
+		local owner = net.ReadEntity()
+		local ent = net.ReadEntity()
 		local x = net.ReadUInt(16)
 		local y = net.ReadUInt(16)
 		local w = net.ReadUInt(3)
 		local h = net.ReadUInt(3)
 		
-		grid.AddFloor(LocalPlayer():GetFactory(),x,y,w,h,ent)
+		grid.AddFloor(owner:GetFactory(),x,y,w,h,ent)
 	end)
 	net.Receive("fact_additem",function()
-		local ent = net.ReadEntity(ent)
+		local owner = net.ReadEntity()
+		local ent = net.ReadEntity()
 		local x = net.ReadUInt(16)
 		local y = net.ReadUInt(16)
 		local w = net.ReadUInt(3)
 		local h = net.ReadUInt(3)
 		
-		grid.AddItem(LocalPlayer():GetFactory(),x,y,w,h,ent)
+		grid.AddItem(owner:GetFactory(),x,y,w,h,ent)
 	end)
 end
 

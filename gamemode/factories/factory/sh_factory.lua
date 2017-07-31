@@ -13,23 +13,31 @@ if CLIENT then
 		fact.Loading = true
 	end)
 	hook.Add("InitPostEntity","fact_createFactObj",function()
-		fact.Create(LocalPlayer())
+		for k,v in pairs(player.GetAll()) do
+			fact.Create(v)
+		end
 		fact.Loading = false
+	end)
+	net.Receive("fact_initialSpawn",function()
+		local ply = net.ReadEntity()
+		if IsValid(ply) and ply != LocalPlayer() then
+			fact.Create(ply)
+		end
+	end)
+else
+	util.AddNetworkString("fact_initialSpawn")
+	hook.Add("PlayerInitialSpawn","fact_createFactObj",function(ply)
+		net.Start("fact_initialSpawn")
+			net.WriteEntity(ply)
+		net.SendOmit(ply)
 	end)
 end
 
 function plymeta:ResetFactory()
+	if IsValid(self:GetVisiting()) then return end
+	
 	if self:GetFactory() then
-		for k,v in pairs(self:GetFactory().Ents)do
-			if IsValid(v) then
-				v:Remove()
-			end
-		end
-		for k,v in pairs(self:GetFactory().Walls)do
-			if IsValid(v) then
-				v:Remove()
-			end
-		end
+		self:RemoveFactory()
 	end
 	for k,v in pairs(self:GetInventory())do
 		self:RemoveInvItem(v)
@@ -85,7 +93,7 @@ function fact.PlaceObject(ply,item,gridX, gridY,rot,nosound)
 			end
 			ent:SetAngles(ang)
 			table.insert(fac.Ents, ent)
-			ent:SetMaker(ply)
+			ent:SetMaker(fac.Owner)
 			ent:SetGridPos(gridX, gridY)
 			ent.Item = item
 			ent:SetItemClass(item.ClassName)
@@ -111,38 +119,83 @@ function fact.PlaceObject(ply,item,gridX, gridY,rot,nosound)
 	end
 end
 
+function fact.GetPlayers(fac)
+	local t = {fac.Owner}
+	for k, v in pairs(fac.Owner.Visitors) do
+		t[#t+1] = k
+	end
+	return t
+end
+
 if SERVER then
 	util.AddNetworkString("fact_syncfactory")
+	util.AddNetworkString("fact_syncfactory_tell")
 	net.Receive("fact_syncfactory",function(len,ply)
+		if ply:GetFactory().Owner != ply then 
+			net.Start("fact_syncfactory_tell")
+				net.WriteBool(false)
+			net.Send(ply)
+			return
+		end
 		ply:SyncFactory()
 	end)
 	function plymeta:SyncFactory()
+		if self:GetFactory().Owner != self then return end
 		local pos = self:GetPos()
+		local p = {}
+		for k,v in pairs(fact.GetPlayers(self:GetFactory()))do
+			if IsValid(v) then
+				p[v]=v:GetPos()
+				net.Start("fact_syncfactory_tell")
+					net.WriteBool(true)
+				net.Send(v)
+			end
+		end
+		
 		self:SaveFactory()
 		
 		self.FactorySync = true
-		for k,v in pairs(self:GetFactory().Ents)do
-			if IsValid(v) then
-				v:Remove()
-			end
-		end
-		for k,v in pairs(self:GetFactory().Walls)do
-			if IsValid(v) then
-				v:Remove()
-			end
-		end
+		self:RemoveFactory()
+		self:SyncInventory()
 		
 		timer.Simple(1,function()
-			net.Start("fact_syncfactory")
-			net.Send(self)
-			
 			local root = self:GetFactory().Root
-			local fac = fact.Create(self)
+			local fac = self:LoadFactory()
 			fac.Root = root
-			self:LoadFactory()
+			for k,v in pairs(p)do
+				k.Factory = fac
+				net.Start("fact_setfactory")
+					net.WriteEntity(k)
+					net.WriteTable(fac)
+				net.Send(k)
+				k:SetPos(v)
+			end
 			self:SetPos(pos)
 			self.FactorySync = false
+			
+			net.Start("fact_syncfactory_tell")
+				net.WriteBool(false)
+			net.Send(fact.GetPlayers(fac))
+			net.Start("fact_syncfactory")
+			net.Send(self)
+			-- net.Send(fac:GetPlayers())
+			
 		end)
+	end
+	
+	function plymeta:RemoveFactory()
+		local fac = self:GetFactory()
+		if fac.Owner != self then return end
+		for k,v in pairs(fac.Ents)do
+			if IsValid(v) then
+				v:Remove()
+			end
+		end
+		for k,v in pairs(fac.Walls)do
+			if IsValid(v) then
+				v:Remove()
+			end
+		end
 	end
 else
 	function fact.Sync()
@@ -157,8 +210,18 @@ function plymeta:GetFactory()
 	return self.Factory
 end
 
-function fact.Create(ply)
-	local f = {}
+function fact.Create(ply, new)
+	local f
+	if new then
+		f = {}
+	else
+		if ply:GetFactory() then
+			table.Empty(ply:GetFactory())
+			f = ply:GetFactory()
+		else
+			f = {}
+		end
+	end
 	
 	f.Owner = ply
 	
@@ -171,15 +234,16 @@ function fact.Create(ply)
 	
 	f.Ents = {}
 	f.Walls = {}
-	f.Root = fact.GetFactoryRoot()
+	f.Root = fact.GetFactoryRoot(ply)
 	table.insert(fact.Factories, f)
 	
 	ply.Factory = f
 	return f
 end
 
-function fact.GetFactoryRoot()
-	local count = player.GetCount()
+function fact.GetFactoryRoot(ply)
+	local count = ply:EntIndex()
+	-- local count = player.GetCount()
 	local x = (count-1) % fact.FactoriesPerLayer --+ 1
 	local y = math.floor((count-1)/fact.FactoriesPerLayer) % fact.FactoriesPerLayer --+ 1
 	local z = math.floor((count-1) / (fact.FactoriesPerLayer ^ 2)) --+ 1

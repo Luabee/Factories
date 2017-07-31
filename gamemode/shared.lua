@@ -14,14 +14,14 @@ ConVars = {}
 	
 if CLIENT then
 	ConVars.Client = {}
-	-- ConVars.Client.autoCrouch = CreateClientConVar("fact_auto_crouch", 1, true, true, "Whether to automatically crouch while jumping and sprinting.")
+	ConVars.Client.inviteTime = CreateClientConVar("fact_invite_time", 30, true, false, "How long visiting invitations should stay on the screen.")
 	
 end
 
-function GM:ShouldCollide( ent1, ent2 )
-	if ( IsValid( ent1 ) and IsValid( ent2 ) and ent1:IsPlayer() and ent2:IsPlayer() ) then return false end
-	return true
-end
+-- function GM:ShouldCollide( ent1, ent2 )
+	-- if ( IsValid( ent1 ) and IsValid( ent2 ) and ent1:IsPlayer() and ent2:IsPlayer() ) then return false end
+	-- return true
+-- end
 
 function math.InRange(x,min,max)
 	if min > max then 

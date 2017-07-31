@@ -29,10 +29,12 @@ function ENT:Initialize()
 	end
 	
 	timer.Simple(.5,function()
-		self:UpdateInOut()
-		for k,v in pairs(self:GetAdjacentEnts())do
-			if v.IsItemHolder then
-				v:UpdateInOut()
+		if IsValid(self) then
+			self:UpdateInOut()
+			for k,v in pairs(self:GetAdjacentEnts())do
+				if v.IsItemHolder then
+					v:UpdateInOut()
+				end
 			end
 		end
 	end)
@@ -142,6 +144,10 @@ function ENT:OnRemove()
 end
 
 function ENT:Think()
+	if CLIENT and IsValid(self:GetMaker()) then
+		if not LocalPlayer():HasPermission(self:GetMaker(),PERMISSION_VIEW) then return end
+	end
+	
 	if self:GetPickingUp() then
 		
 		local item, input, track = self:IsThereInput()
@@ -342,7 +348,11 @@ function ENT:ShowSelectionMenu(name, filter, onclose)
 			self:Close()
 		end
 	end
-	frame.OnClose = onclose
+	function frame.OnClose(s)
+		if IsValid(self) then
+			onclose(s)
+		end
+	end
 	
 	local bg = vgui.Create("Panel",frame)
 	bg:SetSize(145,145)

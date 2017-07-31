@@ -76,9 +76,14 @@ function GM:OnScreenClicked(mb)
 	elseif mb == MOUSE_RIGHT then
 		
 		local target = ply:GetHoveredEnt()
-		if hook.Run("PlayerCanBreak",ply,target) != false then
-			mousein.Breaking = target.BreakSpeed
-			mousein.BreakTarget = target
+		if IsValid(target) then
+			if hook.Run("PlayerCanBreak",ply,target) != false then
+				mousein.Breaking = target.BreakSpeed
+				mousein.BreakTarget = target
+			elseif !mousein.CantBreak then
+				mousein.CantBreak = true
+				notification.AddLegacy("You can't remove that object.",NOTIFY_ERROR,2)
+			end
 		end
 	end
 end
@@ -86,6 +91,7 @@ function GM:OnScreenReleased(mb)
 	
 	if mb == MOUSE_RIGHT then
 		mousein.Breaking = false
+		mousein.CantBreak = false
 	end
 	
 end
@@ -111,21 +117,31 @@ hook.Add("HUDPaint","fact_breaking",function()
 		local fac = LocalPlayer():GetFactory()
 		local x,y = LocalPlayer():GetMouseVector():ToGrid(fac)
 		local target = ((fac.Grid[x] and fac.Grid[x][y] and IsValid(fac.Grid[x][y])) and fac.Grid[x][y] or (fac.Floors[x] and fac.Floors[x][y]))
-		if IsValid(target) and target.IsFactoryPart and target == mousein.BreakTarget and hook.Run("PlayerCanBreak",LocalPlayer(),target) != false then
-		
-			mousein.Breaking = mousein.Breaking - FrameTime()
+		local can = hook.Run("PlayerCanBreak",LocalPlayer(),target) != false
+		if IsValid(target) then
+			if target.IsFactoryPart and target == mousein.BreakTarget and can then
 			
-			if mousein.Breaking <= 0 then
-				mousein.Break(mousein.BreakTarget)
-				mousein.BreakTarget = target
-				mousein.Breaking = target.BreakSpeed
+				mousein.Breaking = mousein.Breaking - FrameTime()
+				
+				if mousein.Breaking <= 0 then
+					mousein.Break(mousein.BreakTarget)
+					mousein.BreakTarget = target
+					mousein.Breaking = target.BreakSpeed
+				end
+				
+			elseif target.IsFactoryPart then
+				if !can then
+					-- if !mousein.CantBreak then
+						-- mousein.CantBreak = true
+						-- notification.AddLegacy("You can't remove that object.",NOTIFY_ERROR,2)
+					-- end
+					return
+				else
+					mousein.BreakTarget = target
+					mousein.Breaking = target.BreakSpeed
+				end
+				
 			end
-			
-		elseif IsValid(target) and target.IsFactoryPart then
-		
-			mousein.BreakTarget = target
-			mousein.Breaking = target.BreakSpeed
-			
 		else
 			return
 		end
