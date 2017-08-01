@@ -363,7 +363,7 @@ end)
 if not IsValid(visit.Label) then
 	visit.Label = vgui.Create("DLabel")
 	visit.Label:ParentToHUD()
-	visit.Label:SetFont("factRoboto30")
+	visit.Label:SetFont("factRoboto28")
 	visit.Label:SetText("")
 	function visit.Label:Think()
 		local vis = IsValid(LocalPlayer()) and LocalPlayer():GetVisiting()

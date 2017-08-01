@@ -51,6 +51,10 @@ function ENT:OnRemove()
 	self:SellAll()
 end
 
+function ENT:GetSelectionMat()
+	return Material("factories/selected_conveyor.png", "unlitgeneric"), self.Yaw
+end
+
 function ENT:PostDrawPreview()
 	local oldpos, oldang = self:GetPos(), self:GetAngles()
 	self:SetAngles(oldang+Angle(0,-90,0))

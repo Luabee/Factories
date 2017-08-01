@@ -23,7 +23,7 @@ net.Receive("fact_sellitem",function(len,ply)
 	local class = net.ReadString()
 	local i = items.List[class]
 	if ply:HasInvItem(class) then
-		ply:AddMoney(i.BasePrice)
+		ply:AddMoney(math.floor(i.BasePrice*.8))
 		ply:TakeInvItem(class)
 	end
 end)
@@ -46,12 +46,12 @@ end
 
 function plymeta:ResetInventory()
 	self.Inventory = {}
-	self:GiveInvItem("fact_floor",4)
+	self:GiveInvItem("fact_floor",3)
 	self:GiveInvItem("fact_inserter",10)
-	self:GiveInvItem("fact_importer",2)
 	self:GiveInvItem("fact_conveyor",15)
 	self:GiveInvItem("fact_assembler",2)
-	self:GiveInvItem("fact_pallet",2)
+	self:GiveInvItem("fact_pallet",1)
 	self:GiveInvItem("fact_miner",1)
+	self:GiveInvItem("fact_furnace",2)
 	self:SyncInventory()
 end

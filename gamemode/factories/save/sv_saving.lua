@@ -40,13 +40,16 @@ hook.Add("PlayerDisconnected","fact_saveEverything",function(ply)
 end)
 
 function plymeta:LoadMoney()
-	local amt = tonumber(file.Read("factories/players/"..(self:SteamID64() or 0).."/money.txt","DATA"))
+	local amt = tonumber(file.Read("factories/players/"..(self:SteamID64() or 0).."/money.txt","DATA") or ConVars.Server.startmoney:GetFloat())
 	
-	self:SetMoney(amt or GetConVarNumber("fact_money_start"))
+	self:SetMoney(amt)
 end
 function plymeta:SaveMoney()
 	file.CreateDir("factories/players/"..(self:SteamID64() or 0))
-	file.Write("factories/players/"..(self:SteamID64() or 0).."/money.txt", self:GetMoney()) --todo: add mysql
+	local money = self:GetMoney()
+	if money >= 0 then
+		file.Write("factories/players/"..(self:SteamID64() or 0).."/money.txt",money) --todo: add mysql	
+	end
 end
 timer.Create("fact_save_money",10,0,function()
 	for k,v in pairs(player.GetAll()) do
@@ -83,7 +86,7 @@ function plymeta:LoadFactory()
 	local fac = fact.Create(self)
 	if istable(loadtbl) and #loadtbl.ents != 0 then
 		
-		self:SetPos(Vector(0,0,5) + grid.ToVector(self:GetFactory(), unpack(loadtbl.pos)))
+		self:SetPos(Vector(0,0,5) + grid.ToVector(fac, unpack(loadtbl.pos)))
 		for k,v in pairs(loadtbl.ents) do
 			local e = fact.PlaceObject(self,v.class,v.pos[1],v.pos[2],v.yaw,true)
 			if e then
@@ -95,7 +98,7 @@ function plymeta:LoadFactory()
 					net.Start("fact_load")
 						net.WriteEntity(e)
 						net.WriteTable(v)
-					net.Send(fact.GetPlayers(self:GetFactory()))
+					net.Send(fact.GetPlayers(fac))
 				end)
 			end
 		end
@@ -108,9 +111,9 @@ concommand.Add("fact_resetall",function(ply,c,a)
 	if IsValid(ply) then
 		ply:ResetFactory()
 		ply:ResetResearch()
-		ply:SetMoney(GetConVarNumber("fact_money_start"))
+		ply:SetMoney(ConVars.Server.startmoney:GetFloat())
 		ply:SaveMoney()
-		file.Delete("factories/players/"..(self:SteamID64() or 0).."/factory.txt")
+		file.Delete("factories/players/"..(ply:SteamID64() or 0).."/factory.txt")
 		-- ply:ConCommand("retry")
 	end
 end)

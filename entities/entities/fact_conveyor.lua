@@ -1,4 +1,7 @@
-AddCSLuaFile()
+if SERVER then
+	AddCSLuaFile()
+	resource.AddFile("materials/factories/selected_conveyor.png")
+end
 
 BEND_NONE = 0
 BEND_LEFT = 1
@@ -108,6 +111,10 @@ function ENT:Load(tbl)
 		self:SetExport(tbl.item)
 	end
 	
+end
+
+function ENT:GetSelectionMat()
+	return Material("factories/selected_conveyor.png", "unlitgeneric"), self.Yaw
 end
 
 function ENT:SetBend(b)

@@ -75,6 +75,7 @@ function plymeta:RemoveInvItem(item, quan) --accepts an item object or a classna
 	if istable(item) or isstring(item) then
 		item = self:GetInvIndex( item )
 	end
+	if not item then return end
 	if i[item].Quantity > quan then
 		i[item].Quantity = i[item].Quantity - quan
 		if CLIENT then

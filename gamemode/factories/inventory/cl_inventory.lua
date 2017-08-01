@@ -12,6 +12,8 @@ function inv.BuyItem(class)
 		net.WriteString(class)
 	net.SendToServer()
 	
+	surface.PlaySound("factories/coins.mp3")
+	
 	LocalPlayer():AddInvItem(class)
 	
 end
@@ -38,19 +40,29 @@ end
 
 net.Receive("fact_invsync",function()
 	local ply = net.ReadEntity()
-	local size = net.ReadFloat()
-	for k,v in pairs(ply:GetInventory()) do
-		ply:RemoveInvItem(k)
+	
+	if ply == LocalPlayer() then
+		ply:SaveSlots()
 	end
+	
+	for k,v in pairs(ply:GetInventory()) do
+		ply:RemoveInvItem(k,v.Quantity)
+	end
+	if IsValid(g_InHand) then g_InHand:Remove() end
+	
 	ply.Inventory = {}
 	if IsValid(g_SpawnMenu) then	
 		g_SpawnMenu:Update()
 	end
 	
+	local size = net.ReadFloat()
 	for i=1, size do
 		ply:AddInvItem(net.ReadString(), net.ReadFloat())
 	end
 	
+	if ply == LocalPlayer() then
+		ply:LoadSlots()
+	end
 	
 end)
 
@@ -208,6 +220,72 @@ function CreateInvMenu()
 	shop:Populate()
 	
 	
+	//Recipe side
+	local itemsBG = vgui.Create("Panel")
+	itemsBG:DockMargin(10,0,10,0)
+	
+	local itemScroll = vgui.Create("DScrollPanel",itemsBG)
+	itemScroll:Dock(FILL)
+	itemScroll:DockMargin(0,25,0,0)
+	itemScroll:SetMouseInputEnabled(true)
+	
+	local gloss = vgui.Create( "DIconLayout", itemScroll )
+	gloss:SetSize( 340, 180 )
+	gloss:SetPos( 0, 0 )
+	gloss:SetSpaceY( 5 ) //Sets the space in between the panels on the X Axis by 5
+	gloss:SetSpaceX( 5 ) //Sets the space in between the panels on the Y Axis by 5
+	gloss.OnMousePressed = itemScroll.OnMousePressed
+	frame.gloss = gloss
+	function gloss:Populate(txt)
+		self:Clear()
+		
+		local tbl = {}
+		for k,v in pairs(items.List) do --descending order doesn't work so we do it manually
+			tbl[#tbl+1] = v
+		end
+		
+		table.sort(tbl, function(a,b)
+			if a.Level != b.Level then
+				return a.Level > b.Level
+			end
+			return a.BasePrice > b.BasePrice
+		end)
+		
+		for k,v in ipairs(tbl) do //populate the store.
+			if !v.FactoryPart --[[and (!v.NeedsResearch or LocalPlayer():GetResearchLevel(v.NeedsResearch) >= v.Level)]] then
+				if txt and !v.Name:lower():find(txt:lower(),1,true) then continue end
+				local ListItem = self:Add( "InvItem" ) //Add DPanel to the DIconLayout
+				ListItem:SetForSale(true)
+				ListItem:SetItem(v)
+				function ListItem:OnMousePressed(mb)
+					frame:SetItem(v)
+				end
+				
+			end
+		end
+	end
+	gloss:Populate()
+	
+	local search = vgui.Create("DTextEntry",itemsBG)
+	search:SetPos(0,0)
+	search:SetTall(20)
+	search:SetWide(325)
+	search:SetText("Search...")
+	search:SetUpdateOnType(true)
+	function search:OnGetFocus()
+		self:SelectAll()
+		frame:SetKeyboardInputEnabled(true)
+	end
+	function search:OnLoseFocus()
+		frame:SetKeyboardInputEnabled(false)
+	end
+	function search:OnValueChange(new)
+		gloss:Populate(new)
+	end
+	
+	
+	local glossary = tabs:AddSheet("Item Glossary",itemsBG,"icon16/book_open.png")
+	
 	//Selected item details side
 	local selectedSide = vgui.Create("Panel",frame)
 	selectedSide:Dock(RIGHT)
@@ -259,7 +337,7 @@ function CreateInvMenu()
 	
 	local preDescLbl = vgui.Create("DLabel",preDescScr)
 	preDescLbl:Dock(TOP)
-	preDescLbl:DockMargin(5,5,5,5)
+	preDescLbl:DockMargin(5,6,5,5)
 	preDescLbl:SetAutoStretchVertical(true)
 	preDescLbl:SetWrap(true)
 	preDescLbl:SetContentAlignment(7)
@@ -281,6 +359,15 @@ function CreateInvMenu()
 		else
 			inv.SellItem(frame.Item.ClassName)
 		end
+	end
+	
+	local recipe = vgui.Create("RecipeTree",selectedSide)
+	recipe:Dock(TOP)
+	recipe:DockMargin(5,4,5,0)
+	recipe:SetSize(250,50)
+	recipe:SetVisible(false)
+	function recipe:OnItemClicked(itemclass,pnl)
+		frame:SetItem(items.List[itemclass])
 	end
 	
 	function frame:SetItem(i)
@@ -305,15 +392,27 @@ function CreateInvMenu()
 			preTitle:SetText(i.Name)
 			preDescLbl:SetText(i.Desc)
 			prePrice:SetText("$"..string.Comma(i.BasePrice))
+			recipe:SetRecipe(i.Recipe)
 		end
 		if store.Tab:IsActive() then
 			preDescScr:SetTall(72)
 			buySell:SetText("Buy")
+			buySell:Dock(TOP)
+			recipe:Dock(NODOCK)
 			buySell:SetVisible(true)
+			recipe:SetVisible(false)
+		elseif glossary.Tab:IsActive() then
+			preDescScr:SetTall(42)
+			buySell:SetVisible(false)
+			buySell:Dock(NODOCK)
+			recipe:Dock(TOP)
+			recipe:SetVisible(true)
 		else
 			preDescScr:SetTall(102)
 			buySell:SetVisible(false)
-			-- buySell:SetText("Sell")
+			recipe:SetVisible(false)
+			buySell:Dock(NODOCK)
+			recipe:Dock(NODOCK)
 		end
 	end
 	if IsValid(g_InHand) then
@@ -405,21 +504,15 @@ hook.Add("PlayerBindPress","fact_hotbarSlots",function(ply,bind,down)
 		
 		if hovered.Item then
 			if hovered:GetForSale() then
-				-- inv.BuyItem(hovered.Item.ClassName)
-				-- if IsValid(slotPnl) and slotPnl.Item and slotPnl.Item.ClassName != hovered.Item.ClassName then
+			else
+				-- if IsValid(slotPnl) and slotPnl.Item then
 					-- slotPnl:SetKeySlot(0)
 					-- slotPnl:SetInHand(true)
 				-- end
-				-- inv.GetPanel(hovered.Item.ClassName):SetKeySlot(slot)
-			else
-				if IsValid(slotPnl) and slotPnl.Item then
-					slotPnl:SetKeySlot(0)
-					slotPnl:SetInHand(true)
-				end
-				hovered:SetKeySlot(slot)
+				-- hovered:SetKeySlot(slot)
 			end
 		else
-			slotPnl:OnMousePressed(MOUSE_LEFT)
+			-- slotPnl:OnMousePressed(MOUSE_LEFT)
 		end
 	end
 end)

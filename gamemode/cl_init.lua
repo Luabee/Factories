@@ -36,6 +36,7 @@ end)
 for i=12,48,2 do
 	surface.CreateFont("factRoboto"..i,{
 		font = "Roboto",
+		-- font = "Agency FB",
 		size = i,
 		weight = 500,
 		extended=true,

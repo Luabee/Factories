@@ -221,7 +221,7 @@ hook.Add("PostDrawTranslucentRenderables","fact_GhostPlacement",function(sky)
 				local mat, rot = e:GetSelectionMat()
 				rot = (rot or 0) + mousein.Rotation
 				render.SetMaterial(mat)
-				render.DrawQuadEasy(vec + Vector(-48*dim.w/2 + 48/2,-48*dim.h/2 + 48/2,2), Vector(0,0,1), 48*dim.w, 48*dim.h, Color(255,255,255,200), rot)
+				render.DrawQuadEasy(vec + Vector(-48*dim.w/2 + 48/2,-48*dim.h/2 + 48/2,4), Vector(0,0,1), 48*dim.w, 48*dim.h, Color(255,255,255,200), rot)
 			end
 			
 		end
@@ -235,7 +235,7 @@ hook.Add("PostDrawTranslucentRenderables","fact_GhostPlacement",function(sky)
 				local dim = target.Dimensions or {w=1,h=1}
 				rot = (rot or 0)
 				render.SetMaterial(mat)
-				render.DrawQuadEasy(vec + Vector(-48*dim.w/2 + 48/2,-48*dim.h/2 + 48/2,2), Vector(0,0,1), 48*dim.w, 48*dim.h, Color(255,255,255,200), rot)
+				render.DrawQuadEasy(vec + Vector(-48*dim.w/2 + 48/2,-48*dim.h/2 + 48/2,4), Vector(0,0,1), 48*dim.w, 48*dim.h, Color(255,255,255,200), rot)
 			end
 			
 		end

@@ -1,6 +1,7 @@
 local PANEL = {}
 
 inv.ItemPanels = inv.ItemPanels or {}
+inv.MaxID = inv.MaxID or 0
 
 AccessorFunc(PANEL,"ForSale","ForSale",FORCE_BOOL)
 AccessorFunc(PANEL,"Item","Item")
@@ -51,12 +52,13 @@ end
 
 function PANEL:OnRemove()
 	if self.id then
-		table.remove(inv.ItemPanels, self.id)
+		inv.ItemPanels[self.id] = nil
 	end
 end
 
 function PANEL:Index()
-	self.id = #inv.ItemPanels + 1
+	inv.MaxID = inv.MaxID + 1
+	self.id = inv.MaxID
 	inv.ItemPanels[self.id] = self
 end
 
@@ -189,6 +191,8 @@ function PANEL:SetKeySlot(i)
 		g_Hotbar:CreateSlot(old-1)
 		self.key:SetVisible(false)
 	end
+	
+	LocalPlayer():SaveSlots()
 	
 end
 

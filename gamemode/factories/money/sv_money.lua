@@ -1,2 +1,0 @@
-
-local plymeta = FindMetaTable("Player")

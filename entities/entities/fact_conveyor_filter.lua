@@ -95,6 +95,10 @@ function ENT:Load(tbl)
 	end
 end
 
+function ENT:GetSelectionMat()
+	return Material("factories/selected_conveyor.png", "unlitgeneric"), self.Yaw
+end
+
 if SERVER then
 	util.AddNetworkString("fact_filter_conveyor")
 	net.Receive("fact_filter_conveyor",function(len,ply)

@@ -43,9 +43,13 @@ function GM:PlayerInitialSpawn(ply)
 	ply:SetHull(Vector(-5,-5,0),Vector(5,5,64))
 end
 
-function GM:PlayerSetModel(ply)
-	ply:SetModel( "models/player/kleiner.mdl" )
+function GM:PlayerSpawn(ply)
+	self.BaseClass.PlayerSpawn(self,ply)
 	ply:CrosshairDisable()
 	ply:SetWalkSpeed(200)
 	ply:SetRunSpeed(ply:GetWalkSpeed())
+end
+
+function GM:PlayerSetModel(ply)
+	ply:SetModel( "models/player/kleiner.mdl" )
 end

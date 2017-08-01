@@ -121,8 +121,10 @@ end
 
 function fact.GetPlayers(fac)
 	local t = {fac.Owner}
-	for k, v in pairs(fac.Owner.Visitors) do
-		t[#t+1] = k
+	if fac.Owner and fac.Owner.Visitors then
+		for k, v in pairs(fac.Owner.Visitors) do
+			t[#t+1] = k
+		end
 	end
 	return t
 end

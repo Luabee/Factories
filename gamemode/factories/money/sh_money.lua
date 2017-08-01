@@ -5,8 +5,9 @@ local plymeta = FindMetaTable("Player")
 
 function plymeta:SetMoney(new)
 	if SERVER then
-		self:SetNW2Float("fact_money", new)
+		self:SetNWFloat("fact_money", new)
 	end
+	self:SaveMoney()
 end
 function plymeta:AddMoney(amt, source)
 	if SERVER then
@@ -18,7 +19,7 @@ end
 plymeta.GiveMoney = plymeta.AddMoney
 
 function plymeta:GetMoney()
-	return self:GetNW2Float("fact_money", GetConVarNumber("fact_money_start"))
+	return self:GetNWFloat("fact_money",-1)
 end
 function plymeta:CanAfford(amt)
 	return self:GetMoney() >= amt

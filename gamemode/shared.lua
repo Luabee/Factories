@@ -37,6 +37,10 @@ function table.RandomSeq(tbl)
 	return tbl[rand], rand
 end
 
+function table.IsEmpty(tbl)
+	return next(tbl) == nil
+end
+
 --DEBUG:
 E = function(i) return Entity(i or 1) end
 
