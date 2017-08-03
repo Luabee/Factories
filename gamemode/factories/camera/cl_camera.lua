@@ -1,10 +1,22 @@
 
 local plymeta = FindMetaTable("Player")
+
+local scales = { --because aspect ratio defines util.AimVector for some reason
+	[1.3] = 0,
+	[1.7] = 12,
+	[1.8] = 18,
+}
+function util.GetMouseVector()
+	local ply = LocalPlayer()
+	local scrscale = math.Round(ScrW()/ScrH(),1)
+	return util.AimVector( ply.view.angles, ply.view.fov + (scales[scrscale] or 18) , gui.MouseX(), gui.MouseY(), ScrW(), ScrH() )
+end
+
 function plymeta:GetMouseVector()
 	local ply = LocalPlayer()
 	if not ply.view then return self:GetPos() end
 	
-	local toscr = util.AimVector( ply.view.angles, ply.view.fov+18, gui.MouseX(), gui.MouseY(), ScrW(), ScrH() )
+	local toscr = util.GetMouseVector()
 	local HitPos = util.IntersectRayWithPlane(ply.view.origin, toscr, ply:GetPos(), Vector(0,0,1))
 	
 	return HitPos or self:GetPos()
@@ -14,7 +26,7 @@ function plymeta:GetMouseTrace()
 	local ply = LocalPlayer()
 	if not ply.view then return {Hit = false, HitPos = self:GetPos(), Entity = NULL} end
 	
-	local toscr = util.AimVector( ply.view.angles, ply.view.fov+18, gui.MouseX(), gui.MouseY(), ScrW(), ScrH() )
+	local toscr = util.GetMouseVector()
 	local endpos = util.IntersectRayWithPlane(ply.view.origin, toscr, ply:GetPos()-Vector(0,0,4), Vector(0,0,1))
 	local trace = util.TraceLine({start = ply.view.origin, endpos = endpos, filter=self})
 	

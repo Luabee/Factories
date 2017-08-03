@@ -360,10 +360,10 @@ net.Receive("fact_visit_invite",function()
 	end
 end)
 
-if not IsValid(visit.Label) then
+hook.Add("Initialize","fact_visitlabel",function()
 	visit.Label = vgui.Create("DLabel")
 	visit.Label:ParentToHUD()
-	visit.Label:SetFont("factRoboto28")
+	visit.Label:SetFont("factRoboto30")
 	visit.Label:SetText("")
 	function visit.Label:Think()
 		local vis = IsValid(LocalPlayer()) and LocalPlayer():GetVisiting()
@@ -379,4 +379,4 @@ if not IsValid(visit.Label) then
 	visit.Label:AlignTop(20)
 	visit.Label:SetTextColor(color_white)
 	visit.Label:SetExpensiveShadow(2,color_black)
-end
+end)

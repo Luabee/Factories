@@ -143,6 +143,8 @@ if SERVER then
 	end)
 	function plymeta:SyncFactory()
 		if self:GetFactory().Owner != self then return end
+		if self.FactorySync then return end
+		
 		local pos = self:GetPos()
 		local p = {}
 		for k,v in pairs(fact.GetPlayers(self:GetFactory()))do
@@ -155,6 +157,7 @@ if SERVER then
 		end
 		
 		self:SaveFactory()
+		self:SetMoveType(MOVETYPE_NOCLIP)
 		
 		self.FactorySync = true
 		self:RemoveFactory()
@@ -173,6 +176,7 @@ if SERVER then
 				k:SetPos(v)
 			end
 			self:SetPos(pos)
+			self:SetMoveType(MOVETYPE_WALK)
 			self.FactorySync = false
 			
 			net.Start("fact_syncfactory_tell")
