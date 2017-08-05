@@ -73,7 +73,7 @@ hook.Add("InitFactoryItems","fact_items_finished",function()
 	ITEM.Model = "models/props_lab/jar01b.mdl"
 	ITEM.Material = "phoenix_storms/wire/pcb_red"
 	ITEM.ConveyorScale = 1
-	ITEM.Recipe = recipes.Create("1fact_gear","1fact_wire","fact_assembler",5)
+	ITEM.Recipe = recipes.Create("1fact_iron","1fact_","fact_assembler",5)
 	items.Register("fact_research_1", ITEM)
 	
 	local ITEM = {}
@@ -86,7 +86,7 @@ hook.Add("InitFactoryItems","fact_items_finished",function()
 	ITEM.Model = "models/props_lab/jar01b.mdl"
 	ITEM.Material = "phoenix_storms/wire/pcb_green"
 	ITEM.ConveyorScale = 1
-	ITEM.Recipe = recipes.Create("1fact_circuit","2fact_iron_bar","fact_assembler",5)
+	ITEM.Recipe = recipes.Create("2fact_gear","2fact_wire","fact_assembler",5)
 	items.Register("fact_research_2", ITEM)
 	
 	local ITEM = {}
