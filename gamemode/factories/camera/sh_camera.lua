@@ -27,7 +27,10 @@ hook.Add("StartCommand","fact_aiming",function(ply,cmd)
 	end
 	cmd:SetSideMove(side)
 	cmd:SetForwardMove(forward)
+	cmd:SetUpMove(0)
 	
+	cmd:RemoveKey(IN_DUCK)
+	cmd:RemoveKey(IN_JUMP)
 	
 end)
 

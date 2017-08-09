@@ -18,7 +18,7 @@ function ENT:Initialize()
 	
 	-- if SERVER then self:EmitSound("ambient/fire/fire_big_loop1.wav", 60) end
 	self:SetupPreview()
-
+	
 	if ConVars.Server.collisions:GetBool() then
 		self:PhysicsInit(SOLID_VPHYSICS)
 		if SERVER then
@@ -197,38 +197,25 @@ end
 
 function ENT:Save(tbl)
 	self:SellAll()
-	if self.Rotates then
-		tbl.yaw = self.Yaw
-	end
 	tbl.level = self:GetLevel()
 	
-	if self.GetImport then 
-		tbl.item = self:GetImport() 
-	elseif self.GetExport then
-		tbl.item = self:GetExport()
-	end
-	
+	tbl.item = self:GetExport()
 	
 	return tbl
 end
 function ENT:Load(tbl)
-	if self.Rotates then
-		self.Yaw = tbl.yaw
-	end
 	self:SetLevel(tbl.level)
-	
-	if self.SetImport then 
-		self:SetImport(tbl.item) 
-	elseif self.SetExport then
-		self:SetExport(tbl.item)
-	end
 	
 	self.Receives = {}
 	if tbl.item and items.List[tbl.item] then
+		self:SetExport(tbl.item)
+	
 		for k,v in pairs(items.List[tbl.item].Recipe.ingredients) do
 			self.Receives[k] = true
 		end
 	end
+	
+	
 	self.Holding = {}
 	self.Using = {}
 	

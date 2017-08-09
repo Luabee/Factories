@@ -114,10 +114,12 @@ function ENT:Load(tbl)
 		self.Requesting[k] = true
 	end
 	
-	if self.SetImport then 
-		self:SetImport(tbl.item) 
-	elseif self.SetExport then
-		self:SetExport(tbl.item)
+	if tbl.item then
+		if self.SetImport then 
+			self:SetImport(tbl.item) 
+		elseif self.SetExport then
+			self:SetExport(tbl.item)
+		end
 	end
 	
 end
@@ -275,6 +277,7 @@ function ENT:GetAdjacentEnts()
 	local w,h = self.Dimensions.w, self.Dimensions.h
 	
 	local e = {}
+	if not fac then ErrorNoHalt("Player has no factory!\n") return e end
 	
 	for chx = x+1, x-w, -1 do
 		for chy = y+1, y-h, -1 do

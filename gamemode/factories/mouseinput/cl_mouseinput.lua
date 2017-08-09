@@ -152,7 +152,7 @@ hook.Add("HUDPaint","fact_breaking",function()
 		surface.SetDrawColor(color_black)
 		surface.DrawRect(sw/2-w/2, sh-h-65, w, h)
 		surface.SetDrawColor(Color(220,0,0))
-		surface.DrawRect(sw/2-w/2+1, sh-h-65+1, (w-2) * (1 - mousein.Breaking/target.BreakSpeed), h-2)
+		surface.DrawRect(sw/2-w/2+1, sh-h-65+1, (w-2) * (1 - mousein.Breaking/(target.BreakSpeed or 1)), h-2)
 		
 	end
 	

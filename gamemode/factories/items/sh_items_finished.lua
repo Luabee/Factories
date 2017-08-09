@@ -41,7 +41,7 @@ hook.Add("InitFactoryItems","fact_items_finished",function()
 	local ITEM = {}
 	ITEM.Name = "Filing Cabinet"
 	ITEM.Desc = [[A cabinet for holding documents.]]
-	ITEM.BasePrice = 24
+	ITEM.BasePrice = 28
 	ITEM.FinishedProduct = true
 	ITEM.ForSale = false
 	ITEM.Model = "models/props_lab/partsbin01.mdl"
@@ -118,7 +118,7 @@ hook.Add("InitFactoryItems","fact_items_finished",function()
 	local ITEM = {}
 	ITEM.Name = "Pointshop Pack"
 	ITEM.Desc = [[Sell this on a pallet to earn Points for Pointshop.
-Only works if you have Pointshop 1 or 2 installed on the server.]]
+Only works if you have Pointshop 1 or 2 installed.]]
 	ITEM.BasePrice = ConVars.Server.pspack:GetInt()
 	ITEM.Level = 1
 	ITEM.NeedsResearch = "personal"

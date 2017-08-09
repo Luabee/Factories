@@ -64,6 +64,7 @@ end)
 function plymeta:SaveFactory()
 	local fac = self:GetFactory()
 	if IsValid(self:GetVisiting()) then return end
+	if self.FactorySync then return end
 	
 	local savetbl = {
 		ents = {},

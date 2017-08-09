@@ -31,6 +31,17 @@ else
 			net.WriteEntity(ply)
 		net.SendOmit(ply)
 	end)
+	hook.Add("PlayerTick","fact_nofall",function(ply,mv)
+		if mv:GetOrigin().z < ply:GetFactory().Root.z-5 then
+			for k1,v1 in pairs(ply:GetFactory().Floors)do
+				for k2,v2 in pairs(v1)do
+					if IsValid(v2) then
+						mv:SetOrigin(v2:GetPos()+Vector(0,0,5))
+					end
+				end
+			end
+		end
+	end)
 end
 
 function plymeta:ResetFactory()
