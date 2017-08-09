@@ -244,14 +244,10 @@ end
 function ENT:Load(tbl)
 	self.BaseClass.Load(self,tbl)
 	
-	-- self:SetDir(tbl.dir)
-	-- self:SetPickingUp(tbl.pickup)
-	-- self:SetDroppingOff(tbl.dropoff)
 	self:SetPickingUp(false)
 	self:SetDroppingOff(false)
 	self:SetDir(false)
 	self:SetAngles(Angle(0,self.Yaw,0))
-	-- self:SetNW2Float("NextPickup",CurTime())
 end
 
 function ENT:SetupIO(adjacent)

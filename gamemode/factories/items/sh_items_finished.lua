@@ -73,7 +73,7 @@ hook.Add("InitFactoryItems","fact_items_finished",function()
 	ITEM.Model = "models/props_lab/jar01b.mdl"
 	ITEM.Material = "phoenix_storms/wire/pcb_red"
 	ITEM.ConveyorScale = 1
-	ITEM.Recipe = recipes.Create("1fact_iron_bar","1fact_copper_bar","fact_assembler",5)
+	ITEM.Recipe = recipes.Create("fact_iron_bar","fact_copper_bar","fact_assembler",5)
 	items.Register("fact_research_1", ITEM)
 	
 	local ITEM = {}

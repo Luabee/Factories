@@ -73,13 +73,13 @@ function ENT:Save(tbl)
 	end
 	tbl.level = self:GetLevel()
 	
-	tbl.Holding, tbl.Using, tbl.Receives, tbl.Requesting = {}, {}, {}, {}
-	for k,v in pairs(self.Holding) do
-		tbl.Holding[k] = {class=v.ClassName, quan=v.Quantity}
-	end
-	for k,v in pairs(self.Using) do
-		tbl.Using[k] = {class=v.ClassName, quan=v.Quantity}
-	end
+	--[[tbl.Holding, tbl.Using,]] tbl.Receives, tbl.Requesting = {}, {}, {}, {}
+	-- for k,v in pairs(self.Holding) do
+		-- tbl.Holding[k] = {class=v.ClassName, quan=v.Quantity}
+	-- end
+	-- for k,v in pairs(self.Using) do
+		-- tbl.Using[k] = {class=v.ClassName, quan=v.Quantity}
+	-- end
 	for k,v in pairs(self.Receives) do
 		tbl.Receives[k] = true
 	end
@@ -101,12 +101,12 @@ function ENT:Load(tbl)
 	end
 	self:SetLevel(tbl.level)
 	
-	for k,v in pairs(tbl.Holding) do
-		self.Holding[k] = items.Create(v.class,v.quan)
-	end
-	for k,v in pairs(tbl.Using) do
-		self.Using[k] = items.Create(v.class,v.quan)
-	end
+	-- for k,v in pairs(tbl.Holding) do
+		-- self.Holding[k] = items.Create(v.class,v.quan)
+	-- end
+	-- for k,v in pairs(tbl.Using) do
+		-- self.Using[k] = items.Create(v.class,v.quan)
+	-- end
 	for k,v in pairs(tbl.Receives) do
 		self.Receives[k] = true
 	end
