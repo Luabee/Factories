@@ -105,8 +105,10 @@ function mousein.Break(target)
 		LocalPlayer():AddInvItem(target:GetItemClass())
 		
 		timer.Simple(0,function()
-			target:SetNoDraw(true)
-			target:SetSolid(SOLID_NONE)
+			if IsValid(target) then
+				target:SetNoDraw(true)
+				target:SetSolid(SOLID_NONE)
+			end
 		end)
 	end
 end
@@ -172,6 +174,7 @@ hook.Add("PostDrawTranslucentRenderables","fact_GhostPlacement",function(sky)
 	
 	if IsValid(g_InHand) then
 		local item = g_InHand:GetItem()
+		if not item then return end
 		local class = item.EntClass
 		local e = scripted_ents.GetStored(class)
 		if class and e then

@@ -15,11 +15,15 @@ items.Base = items.Base or { --base item. All items have these functions and fie
 	Level = 1,
 	Owner = NULL,
 	EntClass = nil,
+	NeedsResearch = nil,
 	Model = "models/hunter/blocks/cube025x025x025.mdl",
 	ConveyorScale = 1,
 	ConveyorAngle = Angle(0,0,0),
 	ConveyorOffset = Vector(0,0,0),
 	
+	OnSell = function(self, ent)
+		
+	end,
 	SetupPreview = function(self, ent)
 		
 	end,

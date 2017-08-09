@@ -298,7 +298,10 @@ function ENT:SellAll()
 	
 	local total = 0
 	for k,v in pairs(self.Holding or {}) do
-		total = total + v.Quantity * v.BasePrice
+		local can = v:OnSell(self)
+		if can != false then
+			total = total + v.Quantity * v.BasePrice
+		end
 	end
 	self.Holding = {}
 	if total == 0 then return end

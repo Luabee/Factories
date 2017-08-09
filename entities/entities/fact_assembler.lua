@@ -317,27 +317,33 @@ else
 	function ENT:DoClick()
 		local netmsg = "fact_assembler"
 		
-		self:ShowSelectionMenu("Assembler", function(self,item)
-			return item.Recipe.madeIn == self:GetClass() and item.Level <= self:GetLevel()
-		end,
-		
-		function(s)
-			local class = s.Item and s.Item.ClassName or ""
-			net.Start(netmsg)
-				net.WriteString(class)
-				net.WriteEntity(self)
-			net.SendToServer()
-			self:SetExport(class)
-			self.Receives = {}
-			if items.List[class] then
-				for k,v in pairs(items.List[class].Recipe.ingredients) do
-					self.Receives[k] = true
+		self:ShowSelectionMenu("Assembler", 
+			function(self,item)
+				if item.NeedsResearch then
+					return item.Recipe.madeIn == self:GetClass() and item.Level <= self:GetLevel() and self:GetMaker():HasResearch(item.NeedsResearch,item.Level)
+				else
+					return item.Recipe.madeIn == self:GetClass() and item.Level <= self:GetLevel()
 				end
+			end,
+			
+			function(s)
+				local class = s.Item and s.Item.ClassName or ""
+				net.Start(netmsg)
+					net.WriteString(class)
+					net.WriteEntity(self)
+				net.SendToServer()
+				self:SetExport(class)
+				self.Receives = {}
+				if items.List[class] then
+					for k,v in pairs(items.List[class].Recipe.ingredients) do
+						self.Receives[k] = true
+					end
+				end
+				self.Holding = {}
+				self.Using = {}
+				self.Progress = 0
 			end
-			self.Holding = {}
-			self.Using = {}
-			self.Progress = 0
-		end)
+		)
 		
 		
 	end

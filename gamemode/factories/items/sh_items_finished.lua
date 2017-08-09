@@ -73,7 +73,7 @@ hook.Add("InitFactoryItems","fact_items_finished",function()
 	ITEM.Model = "models/props_lab/jar01b.mdl"
 	ITEM.Material = "phoenix_storms/wire/pcb_red"
 	ITEM.ConveyorScale = 1
-	ITEM.Recipe = recipes.Create("1fact_iron","1fact_","fact_assembler",5)
+	ITEM.Recipe = recipes.Create("1fact_iron_bar","1fact_copper_bar","fact_assembler",5)
 	items.Register("fact_research_1", ITEM)
 	
 	local ITEM = {}
@@ -114,5 +114,30 @@ hook.Add("InitFactoryItems","fact_items_finished",function()
 	ITEM.ConveyorScale = 1
 	ITEM.Recipe = recipes.Create("1fact_copper_ore","2fact_circuit","1fact_tire","1fact_gear","fact_assembler3",5)
 	items.Register("fact_research_4", ITEM)
+	
+	local ITEM = {}
+	ITEM.Name = "Pointshop Pack"
+	ITEM.Desc = [[Sell this on a pallet to earn Points for Pointshop.
+Only works if you have Pointshop 1 or 2 installed on the server.]]
+	ITEM.BasePrice = ConVars.Server.pspack:GetInt()
+	ITEM.Level = 1
+	ITEM.NeedsResearch = "personal"
+	ITEM.FinishedProduct = true
+	ITEM.ForSale = false
+	ITEM.Model = "models/Items/combine_rifle_ammo01.mdl"
+	ITEM.ConveyorScale = 1
+	ITEM.Recipe = recipes.Create("1fact_pipe","2fact_wire","fact_assembler1",10)
+	function ITEM:OnSell(ent)
+		if IsValid(ent) and IsValid(ent:GetMaker()) then
+			if ent:GetMaker().PS_GivePoints then
+				ent:GetMaker():PS_GivePoints(self.BasePrice)
+			elseif ent:GetMaker().PS2_AddStandardPoints then
+				ent:GetMaker():PS2_AddStandardPoints(self.BasePrice)
+			end
+			ent:EmitSound("buttons/button24.wav")
+		end
+		return false
+	end
+	items.Register("fact_pointshop_1", ITEM)
 	
 end)

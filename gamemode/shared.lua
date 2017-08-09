@@ -11,6 +11,7 @@ ConVars = {}
 	ConVars.Server = {}
 	ConVars.Server.startmoney = CreateConVar("fact_money_start", 2000, { FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_SERVER_CAN_EXECUTE}, "Sets money new players start with.")
 	ConVars.Server.collisions = CreateConVar("fact_collisions", 0, { FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_SERVER_CAN_EXECUTE}, "Whether players collide with certain factory parts.")
+	ConVars.Server.pspack = CreateConVar("fact_pointshop_amount", 20, { FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_SERVER_CAN_EXECUTE}, "Number of points a player earns when they sell a Pointshop Pack.")
 	
 if CLIENT then
 	ConVars.Client = {}
