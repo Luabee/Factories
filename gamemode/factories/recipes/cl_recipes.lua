@@ -24,10 +24,12 @@ function PNL:Update()
 	
 	local cur, max = 0, table.Count(self.Recipe.ingredients)
 	for k,v in pairs(self.Recipe.ingredients) do
+		local item = items.Create(k)
+		if not item then continue end
+		
 		cur = cur + 1
 		local ii = vgui.Create("InvItem")
 		self:AddPanel(ii)
-		local item = items.Create(k)
 		item.Quantity = v
 		-- ii:SetForSale(true)
 		ii:SetItem(item)

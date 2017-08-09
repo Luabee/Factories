@@ -50,6 +50,7 @@ function grid.ToVector(fac,x,y)
 end
 
 function grid.AddItem(fac,x,y,w,h,ent)
+	if not fac then return end
 	if not fac.Floors[x] then error("Tried to place a floor outside the bounds.") end
 	
 	if ent.SetGridPos then
