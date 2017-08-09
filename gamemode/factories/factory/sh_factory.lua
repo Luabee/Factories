@@ -5,7 +5,7 @@ fact.Factories = {}
 fact.MaxFactorySize = 100
 fact.FactoriesPerLayer = 3
 fact.LowestZ = -12000
-fact.ZHeight = 200
+fact.ZHeight = 500
 -- fact.Layers = {}
 
 if CLIENT then
