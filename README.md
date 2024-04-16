@@ -23,4 +23,4 @@ If you have general questions about the script, feel free to ask me anything thr
 
 **Please do not add me on Steam :)**
 
-Copyright (c) 2017 by Bob Blackmon (Bobblehead, Bobbleheadbob, Luabee)
+Made 2017 by Rynn Blackmon
